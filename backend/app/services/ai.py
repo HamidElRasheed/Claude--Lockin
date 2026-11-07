@@ -83,6 +83,21 @@ def parse_goals(text: str) -> list[ParsedGoal]:
     return result.goals
 
 
+class DailySummary(BaseModel):
+    summary: str
+    tomorrowTip: str  # noqa: N815
+
+
+def daily_summary(entries: list[dict], reflection: str | None) -> DailySummary:
+    """entries: [{"goal": str, "status": str, "reason": str | None}]"""
+    lines = [
+        f"- {e['goal']}: {e['status']}" + (f" (grunn: {e['reason']})" if e.get("reason") else "")
+        for e in entries
+    ]
+    content = "Dagens mål:\n" + "\n".join(lines) + f"\n\nBrukerens oppsummering: {reflection or '(ingen)'}"
+    return _parse("daily_summary", content, DailySummary, max_tokens=1024)
+
+
 def interpret(goal_title: str, text: str) -> Interpretation:
     """Turn what the user said about one goal into done/partial/missed + a short reason."""
     return _parse(
