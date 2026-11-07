@@ -12,7 +12,7 @@ Eiere: **APP** = HamidElRasheed (`mobile/`, branch `app/arbeid`), **BACKEND** = 
 - [x] Skjelett for `mobile/`: Expo SDK 58 og TypeScript, Expo Router, tomme skjermer, `theme/`, `lib/api.ts`, `lib/types.ts` og `lib/mock.ts`, med `expo-audio` og `expo-haptics` installert
 - [x] ElevenLabs-API-nøkkel inn i `backend/.env` (BACKEND)
 - [ ] Groq-nøkkel som gratis reserve (valgfritt) (BACKEND)
-- [ ] Hamid tester appen i Expo Go på iPhonen (APP)
+- [x] Hamid tester appen i Expo Go på iPhonen (APP)
 - [ ] Test at iPhonen når backend over nettet på stedet (begge)
 
 ## Fase 1: Design (lørdag ettermiddag)

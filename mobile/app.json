@@ -38,7 +38,8 @@
         {
           "microphonePermission": "Lockin bruker mikrofonen når du prater deg gjennom dagen. Lyden lagres ikke."
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true,
