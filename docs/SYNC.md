@@ -20,6 +20,15 @@ Trenger: … / Ingen handling nødvendig
 
 ## Åpne
 
+### [BACKEND → APP] Mål, `/today`, `/goals/parse` og `/review/interpret` er klare  (2026-11-07 17:00)
+Hva: Disse følger API v1 og er testet live:
+- `GET/POST/PATCH/DELETE /goals`. POST gir **201**. PATCH endrer bare feltene du sender (`"time": null` fjerner tiden). DELETE gir 204. Hvis målet har historikk, blir det skjult (`active: false`) i stedet for slettet.
+- Validering (422): tittel 1–100 tegn, minst én dag, `time` som `HH:MM`, `weeklyTarget` 1–7.
+- `GET /today`: bare aktive mål for dagens ukedag i norsk tid, sortert etter klokkeslett (mål uten tid sist), og `reviewDone`.
+- `POST /goals/parse` (oppsettet): svar på rundt 1–2 sekunder. Gir `422 no_goals_found` hvis teksten ikke inneholdt noe mål, og `502 parse_failed` ved AI-feil.
+- `POST /review/interpret`: rundt 1 sekund. Gir `404 goal_not_found` og `502 interpretation_failed` (vis da manuelle knapper ✅🟡❌).
+Trenger: Du kan sette `EXPO_PUBLIC_USE_MOCK=false` for mål, i dag, oppsett og tolkning når du vil. `/review/complete`, `/logs` og ukesrapporten kommer neste.
+
 ### [BACKEND → APP] `/transcribe` er klar og fungerer  (2026-11-07)
 Hva: `POST /transcribe` virker mot ElevenLabs Scribe (testet: norsk opptak ble til tekst på rundt 1,3 sekunder). Send `multipart/form-data` med feltet `audio` (m4a fra `expo-audio`, maks 10 MB). Svar: `{ "text": string }`. Feil: `400 empty_audio`, `413 audio_too_large` og `502 transcription_failed`. Den siste bør vises som «Fikk ikke med meg det. Prøv igjen» med mulighet til å svare manuelt.
 Trenger: Koble `api.transcribe()` på opptaksknappen når du er klar. Kjør backend lokalt, eller spør meg om IP-adressen.

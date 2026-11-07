@@ -20,8 +20,8 @@ Eiere: **APP** = HamidElRasheed (`mobile/`, branch `app/arbeid`), **BACKEND** = 
 - [ ] Ferdig design med design-tokens i `mobile/theme/` (APP)
 
 ## Fase 2: Kveldsgjennomgangen fra start til slutt (lørdag kveld) ⭐
-- [ ] Modeller og migrering: Goal, DailyLog og GoalEntry, med `user_id` (BACKEND)
-- [ ] CRUD for `/goals` og `/today` (BACKEND)
+- [x] Modeller: Goal, DailyLog, GoalEntry og WeeklyReport, med `user_id` (BACKEND)
+- [x] CRUD for `/goals`, `/goals/parse` (AI) og `/today` i norsk tid (BACKEND)
 - [x] `/transcribe` med ElevenLabs Scribe og Groq som reserve, der lyden slettes etterpå (BACKEND)
 - [x] `/review/interpret` med Claude Haiku 5.5 og strukturert output (BACKEND). Testet live fra lyd til tekst til tolkning
 - [ ] `/review/complete` med dagsrapport og «I morgen» (BACKEND)
