@@ -59,7 +59,7 @@ export default function DoneScreen() {
 }
 
 const styles = StyleSheet.create({
-  orb: { position: 'absolute', bottom: -260, alignSelf: 'center' },
+  orb: { position: 'absolute', bottom: -280, alignSelf: 'center' },
   gap: { gap: space.md },
   list: { marginTop: space.xxl, gap: space.md },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md },
@@ -67,5 +67,5 @@ const styles = StyleSheet.create({
   muted: { color: palette.textMuted },
   caption: { ...type.caption, color: palette.textMuted },
   tomorrow: { marginTop: space.lg, gap: space.xs },
-  footer: { marginTop: 'auto' },
+  footer: { marginTop: space.xl, alignItems: 'flex-start' },
 });

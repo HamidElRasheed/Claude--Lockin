@@ -128,7 +128,7 @@ export default function ReviewScreen() {
 
   return (
     <Screen tone="dusk">
-      <Pressable style={styles.fill} onPressIn={onPressIn} onPressOut={onPressOut} accessibilityLabel="Hold for å snakke" accessibilityRole="button">
+      <Pressable style={styles.fill} onPressIn={onPressIn} onPressOut={onPressOut} accessibilityHint="Hold inne hvor som helst for å snakke">
         <View style={styles.top}>
           <Progress total={goals.length + 1} current={index} />
           <Pressable onPress={() => router.back()} hitSlop={16} accessibilityRole="button">

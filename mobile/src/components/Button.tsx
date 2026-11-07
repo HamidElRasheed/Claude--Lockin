@@ -22,6 +22,7 @@ export function Button({ label, onPress, tone = 'dawn', variant = 'primary', dis
       style={({ pressed }) => [
         styles.base,
         isPrimary && { backgroundColor: palette.action },
+        variant === 'quiet' && styles.quiet,
         variant === 'outline' && { borderWidth: 1, borderColor: palette.line },
         (pressed || disabled) && styles.dimmed,
       ]}
@@ -47,6 +48,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  quiet: { paddingHorizontal: 0 },
   label: { ...type.body },
   strong: { fontWeight: '600' },
   dimmed: { opacity: 0.6 },

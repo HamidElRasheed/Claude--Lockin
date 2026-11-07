@@ -43,7 +43,7 @@ export function Orb({ mode = 'idle', tone = 'dusk', size = orb.size }: Props) {
   const breath = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, mode === 'listening' ? 1.1 : 1.06] });
   const haloOpacity = pulse.interpolate({
     inputRange: [0, 1],
-    outputRange: mode === 'listening' ? [0.35, 0.6] : [0.18, 0.3],
+    outputRange: mode === 'listening' ? [0.4, 0.65] : [0.22, 0.38],
   });
   const scale = Animated.multiply(base, breath);
   const halo = size * 1.9;
