@@ -9,7 +9,7 @@ import { Voice } from '@/components/Voice';
 import { api } from '@/lib/api';
 import type { DailyLog, GoalStatus } from '@/lib/types';
 import { formatDay } from '@/lib/words';
-import { palettes, radius, space, type } from '@/theme';
+import { palettes, space, type } from '@/theme';
 
 const palette = palettes.dawn;
 const statusLabel: Record<GoalStatus, string> = { done: 'Gjort', partial: 'Delvis', missed: 'Ikke i dag' };
@@ -80,5 +80,5 @@ const styles = StyleSheet.create({
   goal: { ...type.body, color: palette.text },
   caption: { ...type.caption, color: palette.textMuted },
   reflection: { ...type.body, color: palette.textMuted },
-  tomorrow: { backgroundColor: palette.surface, borderRadius: radius.lg, padding: space.lg, gap: space.xs },
+  tomorrow: { borderTopWidth: 1, borderTopColor: palette.text, paddingTop: space.md, gap: space.xs },
 });

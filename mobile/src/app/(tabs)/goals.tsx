@@ -8,7 +8,7 @@ import { Voice } from '@/components/Voice';
 import { api } from '@/lib/api';
 import type { Goal } from '@/lib/types';
 import { formatDays } from '@/lib/words';
-import { palettes, radius, space, type } from '@/theme';
+import { palettes, space, type } from '@/theme';
 
 const palette = palettes.dawn;
 
@@ -60,7 +60,7 @@ export default function GoalsScreen() {
       )}
 
       <View style={styles.footer}>
-        <Button tone="dawn" label="Legg til mål" icon="plus" onPress={() => router.push('/onboarding')} />
+        <Button tone="dawn" label="Legg til mål" onPress={() => router.push('/onboarding')} />
       </View>
     </Screen>
   );
@@ -68,9 +68,9 @@ export default function GoalsScreen() {
 
 const styles = StyleSheet.create({
   list: { flex: 1, marginTop: space.xl },
-  listContent: { gap: space.sm, paddingBottom: space.lg },
-  card: { backgroundColor: palette.surface, borderRadius: radius.md, padding: space.md, gap: 2 },
-  title: { ...type.body, color: palette.text, fontWeight: '600' },
+  listContent: { paddingBottom: space.lg },
+  card: { paddingVertical: space.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: palette.line, gap: 2 },
+  title: { ...type.body, ...type.strong, color: palette.text },
   caption: { ...type.caption, color: palette.textMuted },
   footer: { marginTop: 'auto', paddingTop: space.md },
 });
