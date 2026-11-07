@@ -55,16 +55,37 @@ export default function MorningScreen() {
         </>
       )}
 
-      {state.kind === 'ready' && <Ready today={state.today} onReview={() => router.push('/review')} onWeek={() => router.push('/week')} />}
+      {state.kind === 'ready' && <Ready today={state.today} onReview={() => router.push('/review')} onWeek={() => router.push('/week')} onLog={() => router.push('/log')} onSetup={() => router.push('/onboarding')} />}
     </Screen>
   );
 }
 
-function Ready({ today, onReview, onWeek }: { today: Today; onReview: () => void; onWeek: () => void }) {
+function Ready({
+  today,
+  onReview,
+  onWeek,
+  onLog,
+  onSetup,
+}: {
+  today: Today;
+  onReview: () => void;
+  onWeek: () => void;
+  onLog: () => void;
+  onSetup: () => void;
+}) {
   const [first] = today.goals;
 
   if (!first) {
-    return <Voice tone="dawn" muted>Ingen mål i dag. Nyt den.</Voice>;
+    return (
+      <>
+        <View style={styles.gap}>
+          <Voice tone="dawn" muted>Ingen mål i dag. Nyt den.</Voice>
+        </View>
+        <View style={styles.footer}>
+          <Button tone="dawn" variant="outline" label="Sett opp mål" onPress={onSetup} />
+        </View>
+      </>
+    );
   }
 
   const intro = `${countWord(today.goals.length)} i dag. Først ${first.title.toLowerCase()}${first.time ? `, kl. ${first.time}` : ''}.`;
@@ -89,6 +110,7 @@ function Ready({ today, onReview, onWeek }: { today: Today; onReview: () => void
         <View style={styles.links}>
           {!today.reviewDone && <Button tone="dawn" variant="outline" label="Start kvelden" onPress={onReview} />}
           <Button tone="dawn" variant="quiet" label="Uken din" onPress={onWeek} />
+          <Button tone="dawn" variant="quiet" label="Dagene" onPress={onLog} />
         </View>
       </View>
     </>
@@ -106,5 +128,5 @@ const styles = StyleSheet.create({
   goalLater: { color: palette.textMuted },
   footer: { marginTop: space.xxl, gap: space.md },
   caption: { ...type.caption, color: palette.textMuted },
-  links: { flexDirection: 'row', gap: space.sm, alignItems: 'center' },
+  links: { flexDirection: 'row', flexWrap: 'wrap', columnGap: space.md, alignItems: 'center' },
 });

@@ -14,12 +14,12 @@ const SIZE = 10;
 export function StatusMark({ status, tone = 'dusk' }: Props) {
   const palette = palettes[tone];
   if (status === 'done') {
-    return <View style={[styles.dot, { backgroundColor: palette.orb }]} />;
+    return <View style={[styles.dot, { backgroundColor: palette.mark }]} />;
   }
   if (status === 'partial') {
     return (
-      <View style={[styles.dot, styles.ring, { borderColor: palette.orb }]}>
-        <View style={[styles.half, { backgroundColor: palette.orb }]} />
+      <View style={[styles.dot, styles.ring, { borderColor: palette.mark }]}>
+        <View style={[styles.half, { backgroundColor: palette.mark }]} />
       </View>
     );
   }
