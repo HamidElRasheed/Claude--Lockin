@@ -1,65 +1,110 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
+import { Button } from '@/components/Button';
+import { Orb } from '@/components/Orb';
 import { Screen } from '@/components/Screen';
+import { Voice } from '@/components/Voice';
 import { api } from '@/lib/api';
+import { countWord, greeting } from '@/lib/words';
 import type { Today } from '@/lib/types';
-import { colors, radius, space, type } from '@/theme';
+import { palettes, space, type } from '@/theme';
 
-// Morning screen: today's goals. Placeholder — real design comes later.
+const palette = palettes.dawn;
+
+type State = { kind: 'loading' } | { kind: 'error' } | { kind: 'ready'; today: Today };
+
+// Morning: the app tells you, in one calm sentence, what today holds.
 export default function MorningScreen() {
   const router = useRouter();
-  const [today, setToday] = useState<Today | null>(null);
+  const [state, setState] = useState<State>({ kind: 'loading' });
 
-  useEffect(() => {
-    api.getToday().then(setToday).catch(() => setToday(null));
+  const fetchData = useCallback(() => {
+    api
+      .getToday()
+      .then((today) => setState({ kind: 'ready', today }))
+      .catch(() => setState({ kind: 'error' }));
   }, []);
 
-  return (
-    <Screen title="I dag">
-      {today?.goals.map((goal) => (
-        <View key={goal.id} style={styles.row}>
-          <Text style={styles.goal}>{goal.title}</Text>
-          {goal.time && <Text style={styles.time}>{goal.time}</Text>}
-        </View>
-      ))}
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-      <View style={styles.links}>
-        <Pressable onPress={() => router.push('/review')} style={styles.primary}>
-          <Text style={styles.primaryText}>Start kveldsgjennomgang</Text>
-        </Pressable>
-        <Pressable onPress={() => router.push('/log')}>
-          <Text style={styles.link}>Logg</Text>
-        </Pressable>
-        <Pressable onPress={() => router.push('/week')}>
-          <Text style={styles.link}>Ukesrapport</Text>
-        </Pressable>
-        <Pressable onPress={() => router.push('/onboarding')}>
-          <Text style={styles.link}>Oppsett</Text>
-        </Pressable>
+  const retry = () => {
+    setState({ kind: 'loading' });
+    fetchData();
+  };
+
+  return (
+    <Screen tone="dawn">
+      <View style={styles.orb}>
+        <Orb tone="dawn" size={150} />
       </View>
+
+      <Voice tone="dawn">{greeting(new Date())}</Voice>
+
+      {state.kind === 'loading' && <Voice tone="dawn" muted>Et øyeblikk.</Voice>}
+
+      {state.kind === 'error' && (
+        <>
+          <Voice tone="dawn" muted>Fikk ikke hentet dagen din.</Voice>
+          <View style={styles.footer}>
+            <Button tone="dawn" label="Prøv igjen" onPress={retry} />
+          </View>
+        </>
+      )}
+
+      {state.kind === 'ready' && <Ready today={state.today} onReview={() => router.push('/review')} onWeek={() => router.push('/week')} />}
     </Screen>
   );
 }
 
+function Ready({ today, onReview, onWeek }: { today: Today; onReview: () => void; onWeek: () => void }) {
+  const [first] = today.goals;
+
+  if (!first) {
+    return <Voice tone="dawn" muted>Ingen mål i dag. Nyt den.</Voice>;
+  }
+
+  const intro = `${countWord(today.goals.length)} i dag. Først ${first.title.toLowerCase()}${first.time ? `, kl. ${first.time}` : ''}.`;
+
+  return (
+    <>
+      <View style={styles.gap}>
+        <Voice tone="dawn" muted>{intro}</Voice>
+      </View>
+
+      <View style={styles.list}>
+        {today.goals.map((goal, i) => (
+          <View key={goal.id} style={styles.row}>
+            <Text style={[styles.time, i === 0 && styles.timeFirst]}>{goal.time ?? '–'}</Text>
+            <Text style={[styles.goal, i > 0 && styles.goalLater]}>{goal.title}</Text>
+          </View>
+        ))}
+      </View>
+
+      <View style={styles.footer}>
+        <Text style={styles.caption}>{today.reviewDone ? 'Kvelden er gjort.' : 'Vi snakkes i kveld.'}</Text>
+        <View style={styles.links}>
+          {!today.reviewDone && <Button tone="dawn" variant="outline" label="Start kvelden" onPress={onReview} />}
+          <Button tone="dawn" variant="quiet" label="Uken din" onPress={onWeek} />
+        </View>
+      </View>
+    </>
+  );
+}
+
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: space.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-  },
-  goal: { ...type.body, color: colors.text },
-  time: { ...type.body, color: colors.textMuted },
-  links: { marginTop: 'auto', gap: space.md, paddingBottom: space.xl },
-  primary: {
-    backgroundColor: colors.accent,
-    borderRadius: radius.pill,
-    paddingVertical: space.md,
-    alignItems: 'center',
-  },
-  primaryText: { ...type.body, color: colors.surface, fontWeight: '600' },
-  link: { ...type.body, color: colors.textMuted, textAlign: 'center' },
+  orb: { position: 'absolute', top: -150, right: -130 },
+  gap: { marginTop: space.lg },
+  list: { marginTop: 'auto', gap: space.md },
+  row: { flexDirection: 'row', alignItems: 'baseline', gap: space.md },
+  time: { ...type.caption, width: 48, color: palette.textMuted, fontVariant: ['tabular-nums'] },
+  timeFirst: { color: palette.text, fontWeight: '600' },
+  goal: { ...type.body, color: palette.text },
+  goalLater: { color: palette.textMuted },
+  footer: { marginTop: space.xxl, gap: space.md },
+  caption: { ...type.caption, color: palette.textMuted },
+  links: { flexDirection: 'row', gap: space.sm, alignItems: 'center' },
 });

@@ -165,20 +165,20 @@ npx expo install <pakke>        # bruk ALLTID denne i stedet for npm install <pa
 
 ---
 
-## 8. Designregler (mot AI-slop)
+## 8. Designregler: «Pust» (mot AI-slop)
 
-Det endelige visuelle designet kommer fra designsteget og legges inn i `mobile/src/theme/`. Til da gjelder dette:
+Designretningen heter **Pust** (se `DECISIONS.md`). Appen snakker til brukeren i rolige setninger, og brukeren snakker tilbake. Alle verdier ligger i `mobile/src/theme/`, og prototypen ligger på designlerretet i Claude.
 
-- **Rolig og ren.** Mye luft og et 8-punkts rutenett for avstander (8, 16, 24, 32, 48).
-- **Fargene er tilbakeholdne:** en nøytral bakgrunn, nesten svart tekst og **én** aksentfarge. Ingen gradienter og ingen lilla «AI-glød».
-- **Typografi:** én skrifttype (systemfonten). Maks tre størrelser per skjerm. Tydelig hierarki gjennom vekt og størrelse, ikke farge.
-- **Én hovedhandling per skjerm.** Bare én primærknapp.
-- **Ingen emoji som ikoner** i grensesnittet. Bruk ett konsekvent ikonsett. Statusene ✅ 🟡 ❌ tegnes som egne, rolige komponenter.
-- **Ingen kort-i-kort-i-kort**, ingen tunge skygger og ingen pynt uten funksjon.
-- **Tekstene i appen er korte, på norsk** og i et vennlig, nøkternt du-språk. Ingen utropstegn-hype.
-- **Alle tilstander er designet:** lasting, tom tilstand og feil. Tekst som «Noe gikk galt. Prøv igjen.» er bedre enn en tom skjerm.
-- **Opptaksknappen** gir tydelig visuell tilbakemelding og haptikk (`expo-haptics`) når den trykkes inn og slippes.
-- **Bevegelse** er subtil og kort. Den skal forklare, ikke pynte.
+- **Appen «snakker» med serif.** Alt appen sier (spørsmål, svar, rapporter) skrives i systemets serif-skrift (`type.voice`, New York på iPhone) med komponenten `Voice`. Brukerens egne ord og resten av grensesnittet bruker systemfonten. Dette er de eneste to skriftene. Maks tre størrelser per skjerm.
+- **To stemninger, ikke en mørk modus:** `dawn` (lys og varm: morgen, ukesbrev, oppsett) og `dusk` (dyp blå skumring: kveldsgjennomgang og ferdig-skjermen). Fargene kommer bare fra `palettes` i temaet.
+- **Lyskulen (`Orb`) er den eneste pynten.** Den puster sakte og blir større og lysere mens brukeren snakker. Den myke gløden rundt kulen er den eneste gløden i appen. Ingen gradienter andre steder, og ingen lilla «AI-glød».
+- **Hold hvor som helst for å snakke** i kveldsgjennomgangen, med haptikk (`expo-haptics`) når du trykker og slipper. Det skal alltid gå an å svare med knapper.
+- **Ingen straff:** status vises med `StatusMark` (fylt, halv eller tom ring). Aldri rødt, aldri «du brøt rekka».
+- **Én ting per skjerm og én primærknapp.** Rolig og ren, med et 8-punkts rutenett (8, 16, 24, 32, 48, 72).
+- **Ingen emoji som ikoner**, ingen kort-i-kort og ingen tunge skygger.
+- **Tekstene er korte, på norsk** og i et varmt, nøkternt du-språk. AI-en sier lite: «Notert.», «Forstått.», «Sov godt.» Ingen utropstegn.
+- **Alle tilstander er designet:** lasting, tom tilstand og feil.
+- **Bevegelse** er langsom og myk (pust, ikke sprett), og laget med `Animated` fra React Native, ikke et eget animasjonsbibliotek.
 
 **Test før du sier at en skjerm er ferdig:** ville dette sett ut som en app fra et ordentlig produktteam? Hvis ikke, er den ikke ferdig.
 

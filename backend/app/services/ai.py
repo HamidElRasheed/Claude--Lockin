@@ -89,9 +89,11 @@ class DailySummary(BaseModel):
 
 
 def daily_summary(entries: list[dict], reflection: str | None) -> DailySummary:
-    """entries: [{"goal": str, "status": str, "reason": str | None}]"""
+    """entries: [{"goal": str, "status": str, "reason": str | None, "transcript": str | None}]"""
     lines = [
-        f"- {e['goal']}: {e['status']}" + (f" (grunn: {e['reason']})" if e.get("reason") else "")
+        f"- {e['goal']}: {e['status']}"
+        + (f" (grunn: {e['reason']})" if e.get("reason") else "")
+        + (f' (brukeren sa: "{e["transcript"]}")' if e.get("transcript") else "")
         for e in entries
     ]
     content = "Dagens mål:\n" + "\n".join(lines) + f"\n\nBrukerens oppsummering: {reflection or '(ingen)'}"

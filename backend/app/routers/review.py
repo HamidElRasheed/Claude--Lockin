@@ -76,7 +76,10 @@ async def complete(body: CompleteReviewRequest, db: Session = Depends(get_db)) -
     try:
         result = await run_in_threadpool(
             ai.daily_summary,
-            [{"goal": e.goal_title, "status": e.status, "reason": e.reason} for e in body.entries],
+            [
+                {"goal": e.goal_title, "status": e.status, "reason": e.reason, "transcript": e.transcript}
+                for e in body.entries
+            ],
             body.reflection,
         )
         daily.summary, daily.tomorrow_tip = result.summary, result.tomorrowTip

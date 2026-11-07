@@ -1,20 +1,25 @@
+import { StatusBar } from 'expo-status-bar';
 import type { ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors, space, type } from '@/theme';
+import { Voice } from '@/components/Voice';
+import { palettes, space, type Tone } from '@/theme';
 
 type Props = {
-  title: string;
+  tone?: Tone;
+  title?: string;
   children?: ReactNode;
 };
 
-// Base layout for every screen: safe area, background, title.
-export function Screen({ title, children }: Props) {
+// Base layout for every screen: mood (dawn/dusk), safe area, generous margins.
+export function Screen({ tone = 'dawn', title, children }: Props) {
+  const palette = palettes[tone];
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}>
+      <StatusBar style={tone === 'dusk' ? 'light' : 'dark'} />
       <View style={styles.container}>
-        <Text style={styles.title}>{title}</Text>
+        {title ? <Voice tone={tone}>{title}</Voice> : null}
         {children}
       </View>
     </SafeAreaView>
@@ -22,7 +27,6 @@ export function Screen({ title, children }: Props) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  container: { flex: 1, paddingHorizontal: space.lg, paddingTop: space.lg, gap: space.md },
-  title: { ...type.title, color: colors.text },
+  safe: { flex: 1 },
+  container: { flex: 1, paddingHorizontal: space.xl, paddingTop: space.xxl, paddingBottom: space.lg },
 });

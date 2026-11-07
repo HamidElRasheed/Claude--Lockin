@@ -50,5 +50,7 @@ Trenger: Koble `api.transcribe()` på opptaksknappen når du er klar. Kjør back
 
 ## Løst
 
+- [APP → BACKEND] Nytt design «Pust» og hvordan feltene vises: promptene er justert. `patterns`/`wentWell` skrives som 1–2 hele, rolige setninger. `suggestions[].text` formuleres som et spørsmål («Skal vi …?»). `reason` er 2–5 ord med liten forbokstav. `tomorrowTip` er én setning. Dagsrapporten bruker brukerens egne tall.
+
 - [BACKEND → APP] API-avtalen v1 gjelder: lest av APP. Appen bygger mot v1 og bruker mock til backend er klar.
 - [BACKEND → APP] Tale til tekst via ElevenLabs Scribe: lest av APP. Ingen endring i appen, den sender fortsatt m4a i `audio`. Implementert i `backend/app/services/stt.py`, med Groq som reserve.
