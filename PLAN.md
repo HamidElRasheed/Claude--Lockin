@@ -23,7 +23,8 @@ Eiere: **APP** = HamidElRasheed (`mobile/`, branch `app/arbeid`), **BACKEND** = 
 - [ ] Modeller og migrering: Goal, DailyLog og GoalEntry, med `user_id` (BACKEND)
 - [ ] CRUD for `/goals` og `/today` (BACKEND)
 - [x] `/transcribe` med ElevenLabs Scribe og Groq som reserve, der lyden slettes etterpå (BACKEND)
-- [ ] `/review/interpret` og `/review/complete` med prompter (BACKEND)
+- [x] `/review/interpret` med Claude Haiku 5.5 og strukturert output (BACKEND). Testet live fra lyd til tekst til tolkning
+- [ ] `/review/complete` med dagsrapport og «I morgen» (BACKEND)
 - [ ] Opptaksknapp (hold for å snakke, med haptikk) (APP)
 - [ ] Kveldsgjennomgangen mot mock, deretter mot ekte API (APP)
 

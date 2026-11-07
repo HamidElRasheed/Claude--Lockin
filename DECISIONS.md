@@ -14,4 +14,5 @@ Kort logg over beslutninger. Nyeste nederst. Format: **Beslutning**, hvorfor, og
 10. **AI-modellen for tolking og rapporter er ikke valgt ennå.** Den ligger bak `services/ai.py`.
 11. **RevenueCat for betaling, senere.** Ikke en del av hackathonet.
 12. **Tale til tekst: ElevenLabs Scribe, med Groq Whisper som reserve** (erstatter OpenAI i punkt 6). Gratis kreditter fra hackathonet, sterk norsk og mulighet for ElevenLabs-premien. Groq har en gratisversjon. AI-en har fortsatt ingen stemme.
+14. **AI-modell: Claude Haiku 5.5 (`claude-haiku-5-5`) via Anthropic-API-et, med strukturert output.** Den er nesten gratis ($5 i kreditt holder for hele hackathonet), god på norsk, og den strukturerte outputen gir alltid gyldig JSON. Modellen kan byttes med `AI_MODEL` i `.env`. Gratisalternativer som Groq og Gemini var vurdert, men har svakere norsk eller usikre vilkår for personlige data.
 13. **API v1 er låst, og agentene kommuniserer via `docs/SYNC.md`.** Agentene på de to PC-ene kan ikke snakke direkte, og vi vil unngå møter for hver lille endring.

@@ -68,7 +68,7 @@ Ikke heng deg opp i små detaljer, men lever aldri noe som ser halvferdig ut.
 | Backend | **Python 3.13 + FastAPI** | Pydantic for validering. Automatisk OpenAPI på `/docs`. Ikke 3.15: mange pakker mangler ferdige versjoner for den |
 | Database | **SQLite** via **SQLAlchemy 2.0** | Bytte til PostgreSQL senere skal bare kreve endring av `DATABASE_URL` |
 | Tale til tekst | **ElevenLabs Scribe** (kreditter fra hackathonet), **Groq Whisper** som gratis reserve. Ligger bak `services/stt.py` | Norsk. Leverandøren skal kunne byttes |
-| AI (tolking og rapporter) | **Ikke valgt ennå.** Ligger bak `services/ai.py` | Se `DECISIONS.md` |
+| AI (tolking og rapporter) | **Claude Haiku 5.5** (`claude-haiku-5-5`) via `anthropic`-SDK-en, med `messages.parse` og Pydantic for strukturert output. Ligger bak `services/ai.py` | Modellen settes med `AI_MODEL` i `.env`. Effort `low` |
 
 Ikke legg til nye avhengigheter uten god grunn. Skriv grunnen i commit-meldingen.
 

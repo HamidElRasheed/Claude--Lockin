@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     groq_stt_model: str = "whisper-large-v3"
     groq_language: str = "no"  # ISO 639-1
 
+    # AI (interpretation and reports): Claude via the Anthropic API
+    anthropic_api_key: str = ""
+    ai_model: str = "claude-haiku-5-5"
+
     # Hackathon: no auth, one fixed demo user.
     demo_user_id: str = "demo"
 
