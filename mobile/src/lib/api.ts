@@ -1,6 +1,14 @@
 // All backend calls go through this file. Screens never call fetch directly.
 
-import { mockGoals, mockLogs, mockToday, mockWeeklyReport } from './mock';
+import {
+  mockCompleteReview,
+  mockGoals,
+  mockInterpret,
+  mockLogs,
+  mockToday,
+  mockTranscribe,
+  mockWeeklyReport,
+} from './mock';
 import type {
   DailyLog,
   Goal,
@@ -13,6 +21,7 @@ import type {
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
 const USE_MOCK = process.env.EXPO_PUBLIC_USE_MOCK !== 'false';
+export const isMock = USE_MOCK;
 
 export class ApiError extends Error {
   constructor(
@@ -38,6 +47,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+// Mock responses wait a little so loading states are visible in the prototype.
+function later<T>(value: T, ms = 900): Promise<T> {
+  return new Promise((resolve) => setTimeout(() => resolve(value), ms));
+}
+
 function json(body: unknown): RequestInit {
   return {
     method: 'POST',
@@ -60,6 +74,7 @@ export const api = {
     USE_MOCK ? Promise.resolve(mockToday) : request('/today'),
 
   transcribe: async (audioUri: string): Promise<{ text: string }> => {
+    if (USE_MOCK) return later(mockTranscribe());
     const form = new FormData();
     // React Native FormData accepts { uri, name, type } for files.
     form.append('audio', { uri: audioUri, name: 'answer.m4a', type: 'audio/m4a' } as unknown as Blob);
@@ -67,15 +82,19 @@ export const api = {
   },
 
   interpret: (goalId: string, text: string): Promise<Interpretation> =>
-    request('/review/interpret', json({ goalId, text })),
+    USE_MOCK ? later(mockInterpret(text), 600) : request('/review/interpret', json({ goalId, text })),
 
   completeReview: (date: string, entries: GoalEntry[], reflection: string | null): Promise<DailyLog> =>
-    request('/review/complete', json({ date, entries, reflection })),
+    USE_MOCK ? later(mockCompleteReview(date, entries, reflection)) : request('/review/complete', json({ date, entries, reflection })),
 
   getLogs: (from: string, to: string): Promise<DailyLog[]> =>
     USE_MOCK ? Promise.resolve(mockLogs) : request(`/logs?from=${from}&to=${to}`),
 
-  getLog: (date: string): Promise<DailyLog> => request(`/logs/${date}`),
+  getLog: (date: string): Promise<DailyLog> => {
+    if (!USE_MOCK) return request(`/logs/${date}`);
+    const log = mockLogs.find((l) => l.date === date);
+    return log ? Promise.resolve(log) : Promise.reject(new ApiError('log_not_found', 'Fant ingen logg for dagen.', 404));
+  },
 
   getWeeklyReport: (week: string): Promise<WeeklyReport> =>
     USE_MOCK ? Promise.resolve(mockWeeklyReport) : request(`/reports/weekly?week=${week}`),
