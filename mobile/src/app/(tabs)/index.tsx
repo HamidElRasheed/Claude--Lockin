@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
@@ -27,9 +27,8 @@ export default function MorningScreen() {
       .catch(() => setState({ kind: 'error' }));
   }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  // Refresh whenever the tab comes back into view (after the review or setup).
+  useFocusEffect(fetchData);
 
   const retry = () => {
     setState({ kind: 'loading' });
@@ -37,7 +36,7 @@ export default function MorningScreen() {
   };
 
   return (
-    <Screen tone="dawn">
+    <Screen tone="dawn" inTabs>
       <View style={styles.orb}>
         <Orb tone="dawn" size={150} />
       </View>
@@ -55,24 +54,12 @@ export default function MorningScreen() {
         </>
       )}
 
-      {state.kind === 'ready' && <Ready today={state.today} onReview={() => router.push('/review')} onWeek={() => router.push('/week')} onLog={() => router.push('/log')} onSetup={() => router.push('/onboarding')} />}
+      {state.kind === 'ready' && <Ready today={state.today} onReview={() => router.push('/review')} onSetup={() => router.push('/onboarding')} />}
     </Screen>
   );
 }
 
-function Ready({
-  today,
-  onReview,
-  onWeek,
-  onLog,
-  onSetup,
-}: {
-  today: Today;
-  onReview: () => void;
-  onWeek: () => void;
-  onLog: () => void;
-  onSetup: () => void;
-}) {
+function Ready({ today, onReview, onSetup }: { today: Today; onReview: () => void; onSetup: () => void }) {
   const [first] = today.goals;
 
   if (!first) {
@@ -111,14 +98,6 @@ function Ready({
         ) : (
           <Button tone="dawn" label="Start kvelden" icon="moon.stars" onPress={onReview} />
         )}
-        <View style={styles.links}>
-          <View style={styles.half}>
-            <Button tone="dawn" variant="tonal" label="Uken din" icon="chart.line.uptrend.xyaxis" onPress={onWeek} fill />
-          </View>
-          <View style={styles.half}>
-            <Button tone="dawn" variant="tonal" label="Dagene" icon="book.closed" onPress={onLog} fill />
-          </View>
-        </View>
       </View>
     </>
   );
@@ -135,6 +114,4 @@ const styles = StyleSheet.create({
   goalLater: { color: palette.textMuted },
   footer: { marginTop: space.xxl, gap: space.sm },
   caption: { ...type.caption, color: palette.textMuted },
-  links: { flexDirection: 'row', gap: space.sm },
-  half: { flex: 1 },
 });

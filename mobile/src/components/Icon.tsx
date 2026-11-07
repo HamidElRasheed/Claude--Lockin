@@ -13,6 +13,9 @@ const fallbackGlyph: Record<string, string> = {
   'chart.line.uptrend.xyaxis': '↗',
   'moon.stars': '☾',
   'hand.tap': '•',
+  'sun.max': '○',
+  target: '◎',
+  plus: '+',
 };
 
 type Props = {

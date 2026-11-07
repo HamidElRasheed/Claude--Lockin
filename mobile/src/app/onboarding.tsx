@@ -41,12 +41,17 @@ export default function OnboardingScreen() {
     }
   }
 
+  function close() {
+    if (router.canGoBack()) router.back();
+    else router.replace('/');
+  }
+
   async function save() {
     setStage('saving');
     setMessage(null);
     try {
       for (const draft of drafts) await api.createGoal(draft);
-      router.replace('/');
+      close();
     } catch {
       setMessage('Fikk ikke lagret alle målene. Prøv igjen.');
       setStage('confirm');
@@ -55,6 +60,9 @@ export default function OnboardingScreen() {
 
   return (
     <Screen tone="dawn">
+      <View style={styles.top}>
+        <IconButton icon="xmark" label="Lukk" onPress={close} />
+      </View>
       <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {(stage === 'write' || stage === 'parsing') && (
           <>
@@ -127,6 +135,7 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   center: { alignItems: 'center' },
+  top: { alignItems: 'flex-end', marginTop: -space.xl, marginBottom: space.md },
   caption: { ...type.caption, color: palette.textMuted, marginTop: space.sm },
   input: {
     ...type.body,

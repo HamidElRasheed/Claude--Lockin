@@ -1,9 +1,7 @@
-import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
-import { IconButton } from '@/components/IconButton';
 import { Orb } from '@/components/Orb';
 import { Screen } from '@/components/Screen';
 import { Voice } from '@/components/Voice';
@@ -25,7 +23,6 @@ function lastWeek(): string {
 
 // The weekly report reads like a short letter: what happened, why, and one concrete offer.
 export default function WeekScreen() {
-  const router = useRouter();
   const [state, setState] = useState<State>({ kind: 'loading' });
 
   const fetchData = useCallback(() => {
@@ -49,11 +46,10 @@ export default function WeekScreen() {
   const weekNumber = state.kind === 'ready' ? Number(state.report.week.split('W')[1]) : null;
 
   return (
-    <Screen tone="dawn">
+    <Screen tone="dawn" inTabs>
       <View style={styles.header}>
         <Orb tone="dawn" size={14} />
         <Text style={styles.caption}>{weekNumber ? `Uke ${weekNumber}` : 'Uken din'}</Text>
-        <IconButton icon="xmark" label="Lukk ukesbrevet" onPress={() => router.back()} />
       </View>
 
       {state.kind === 'loading' && <Voice tone="dawn" muted>Skriver brevet ditt. Det tar noen sekunder.</Voice>}
