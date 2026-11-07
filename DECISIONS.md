@@ -13,3 +13,5 @@ Kort logg over beslutninger. Nyeste nederst. Format: **Beslutning**, hvorfor, og
 9. **Ingen ekte Google Kalender-kobling i hackathon-versjonen.** Forslagene vises i ukesrapporten. Innlogging med Google på mobil tar for lang tid nå.
 10. **AI-modellen for tolking og rapporter er ikke valgt ennå.** Den ligger bak `services/ai.py`.
 11. **RevenueCat for betaling, senere.** Ikke en del av hackathonet.
+12. **Tale til tekst: ElevenLabs Scribe, med Groq Whisper som reserve** (erstatter OpenAI i punkt 6). Gratis kreditter fra hackathonet, sterk norsk og mulighet for ElevenLabs-premien. Groq har en gratisversjon. AI-en har fortsatt ingen stemme.
+13. **API v1 er låst, og agentene kommuniserer via `docs/SYNC.md`.** Agentene på de to PC-ene kan ikke snakke direkte, og vi vil unngå møter for hver lille endring.

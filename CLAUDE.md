@@ -67,7 +67,7 @@ Ikke heng deg opp i små detaljer, men lever aldri noe som ser halvferdig ut.
 | Opptak | `expo-audio` | Fungerer i Expo Go |
 | Backend | **Python 3.13 + FastAPI** | Pydantic for validering. Automatisk OpenAPI på `/docs`. Ikke 3.15: mange pakker mangler ferdige versjoner for den |
 | Database | **SQLite** via **SQLAlchemy 2.0** | Bytte til PostgreSQL senere skal bare kreve endring av `DATABASE_URL` |
-| Tale til tekst | OpenAI-transkribering, bak et eget grensesnitt i `services/stt.py` | Norsk. Leverandøren skal kunne byttes, for eksempel til NB-Whisper |
+| Tale til tekst | **ElevenLabs Scribe** (kreditter fra hackathonet), **Groq Whisper** som gratis reserve. Ligger bak `services/stt.py` | Norsk. Leverandøren skal kunne byttes |
 | AI (tolking og rapporter) | **Ikke valgt ennå.** Ligger bak `services/ai.py` | Se `DECISIONS.md` |
 
 Ikke legg til nye avhengigheter uten god grunn. Skriv grunnen i commit-meldingen.
@@ -84,7 +84,8 @@ Ikke legg til nye avhengigheter uten god grunn. Skriv grunnen i commit-meldingen
 ├── DECISIONS.md         ← beslutninger og hvorfor
 ├── KONTEKST.md          ← bakgrunn fra idéfasen
 ├── docs/
-│   └── API.md           ← API-AVTALEN mellom app og backend (kilden til sannhet)
+│   ├── API.md           ← API-AVTALEN mellom app og backend (kilden til sannhet, v1)
+│   └── SYNC.md          ← meldinger mellom APP- og BACKEND-agenten
 ├── mobile/              ← Expo-appen (SDK 58). Les også mobile/AGENTS.md
 │   ├── src/
 │   │   ├── app/         ← Expo Router-skjermer (hver fil er en skjerm)
@@ -126,7 +127,8 @@ Ikke legg til nye avhengigheter uten god grunn. Skriv grunnen i commit-meldingen
 
 ## 6. Hvordan delene kobles sammen
 
-1. **`docs/API.md` er avtalen.** Backend implementerer den, og appen bruker den. Endres den, oppdateres `mobile/src/lib/types.ts` og `backend/app/schemas.py` i samme commit (eller samme PR).
+0. **Agentene snakker sammen via `docs/SYNC.md`.** Ved start av **hver** oppgave: `git pull origin main` og les de åpne meldingene der. Når du endrer noe den andre siden må vite om, skriv en melding der og push den til `main` med en gang. Se reglene øverst i filen. Ikke be brukeren «bli enig med den andre». Les eller skriv i SYNC.md i stedet.
+1. **`docs/API.md` (v1) er avtalen.** Den er låst, og vi bygger mot den. Backend implementerer den, og appen bruker den. Endres den, oppdateres `mobile/src/lib/types.ts` og `backend/app/schemas.py` i samme commit (eller samme PR).
 2. **Appen starter med mockdata** (`src/lib/mock.ts`) som har nøyaktig samme form som API-et. Dermed blir ingen blokkert. Bytt til ekte API med `EXPO_PUBLIC_USE_MOCK=false`.
 3. **Adressen til backend** settes i `mobile/.env` som `EXPO_PUBLIC_API_URL`.
 4. **Mobilen når backend slik:** kjør `uvicorn app.main:app --host 0.0.0.0 --port 8000` og bruk PC-ens IP-adresse på det lokale nettet (samme Wi-Fi). Hvis hackathon-nettet blokkerer trafikk mellom enheter, bruk en tunnel (for eksempel `cloudflared` eller `ngrok`).

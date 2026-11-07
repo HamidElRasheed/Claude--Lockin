@@ -1,6 +1,6 @@
-# API-avtale: app ↔ backend
+# API-avtale: app ↔ backend (v1, gjeldende)
 
-Dette er kilden til sannhet. Backend (`backend/app/schemas.py`) og appen (`mobile/lib/types.ts`) skal speile denne filen. **Endringer krever at begge i teamet er enige**, og typene oppdateres i samme commit.
+Dette er kilden til sannhet. Backend (`backend/app/schemas.py`) og appen (`mobile/src/lib/types.ts`) skal speile denne filen. **v1 er låst. Bygg mot den.** Ønsker om endringer skrives i `docs/SYNC.md`, og typene oppdateres i samme commit.
 
 - Base-URL: `EXPO_PUBLIC_API_URL`, for eksempel `http://192.168.1.20:8000`
 - Alt sendes og mottas som JSON, med unntak av `/transcribe`, som tar imot en lydfil.
