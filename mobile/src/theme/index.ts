@@ -15,8 +15,10 @@ export const palettes = {
     orb: '#F2B880',
     orbGlow: 'rgba(242, 184, 128, 0.45)',
     mark: '#C9733A',
-    action: '#2A2420',
-    actionText: '#F4EDE4',
+    action: '#B84A17',
+    actionText: '#FFF8F1',
+    tonal: '#EADFD0',
+    tonalText: '#2A2420',
   },
   dusk: {
     background: '#161B2E',
@@ -29,6 +31,8 @@ export const palettes = {
     mark: '#F2B880',
     action: '#F2B880',
     actionText: '#161B2E',
+    tonal: '#262D4B',
+    tonalText: '#F1ECE4',
   },
 } as const;
 
@@ -48,8 +52,15 @@ export const space = {
 export const radius = {
   sm: 8,
   md: 14,
+  button: 18,
   lg: 24,
   pill: 999,
+} as const;
+
+export const control = {
+  primaryHeight: 58,
+  height: 50,
+  iconButton: 44,
 } as const;
 
 // The app "speaks" in the system serif (New York on iOS).
