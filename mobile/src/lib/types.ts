@@ -53,3 +53,8 @@ export type Interpretation = {
   status: GoalStatus;
   reason: string | null;
 };
+
+export type ApplySuggestionResult = {
+  goal: Goal;
+  calendarUrl: string;
+};

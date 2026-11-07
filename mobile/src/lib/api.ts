@@ -12,11 +12,13 @@ import {
   mockWeeklyReport,
 } from './mock';
 import type {
+  ApplySuggestionResult,
   DailyLog,
   Goal,
   GoalDraft,
   GoalEntry,
   Interpretation,
+  Suggestion,
   Today,
   WeeklyReport,
 } from './types';
@@ -107,6 +109,12 @@ export const api = {
     const log = mockLogs.find((l) => l.date === date);
     return log ? Promise.resolve(log) : Promise.reject(new ApiError('log_not_found', 'Fant ingen logg for dagen.', 404));
   },
+
+  // "Ja, gjør det": move the goal, get a Google Calendar link to open.
+  applySuggestion: (goalId: string, change: NonNullable<Suggestion['change']>): Promise<ApplySuggestionResult> =>
+    USE_MOCK
+      ? later({ goal: mockGoals[0], calendarUrl: 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=Trene' }, 500)
+      : request('/suggestions/apply', send('POST', { goalId, change })),
 
   // Fetch the stored report; if none exists yet, ask the backend to write it (3–7 s).
   getWeeklyReport: async (week: string): Promise<WeeklyReport> => {
