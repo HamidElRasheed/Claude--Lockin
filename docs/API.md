@@ -91,12 +91,26 @@ Lyden lagres aldri.
 ### Kveldsgjennomgang
 | Metode | Sti | Body | Svar |
 |---|---|---|---|
+| POST | `/review/interpret-day` ⭐ | `{ "text": string }` | `{ "goals": DayGoal[], "missing": string[] }` |
 | POST | `/review/interpret` | `{ "goalId": string, "text": string }` | `{ "status": GoalStatus, "reason": string \| null }` |
 | POST | `/review/complete` | `{ "date": string, "entries": GoalEntry[], "reflection": string \| null }` | `DailyLog` |
 
-Flyten i appen:
-1. For hvert mål tar appen opp lyd og sender den til `/transcribe`. Teksten sendes så til `/review/interpret`, og brukeren kan rette resultatet manuelt.
-2. Til slutt tar appen opp refleksjonen og sender den til `/transcribe`. Deretter sendes alt til `/review/complete`, som lagrer dagen og returnerer `DailyLog` med AI-oppsummeringen.
+```ts
+type DayGoal = {
+  goalId: string;
+  goalTitle: string;
+  status: GoalStatus | null; // null = brukeren nevnte ikke målet, spør om det
+  reason: string | null;
+};
+```
+
+**Flyten i appen (ny, ett opptak for hele dagen):**
+1. Vis alle dagens mål (fra `/today`). Brukeren trykker og snakker fritt om dagen i **ett** opptak, som går til `/transcribe`.
+2. Send teksten til `/review/interpret-day`. Svaret gir status og grunn for **alle** dagens mål, i samme rekkefølge som `/today`. `missing` er målene brukeren ikke nevnte.
+3. For hvert mål i `missing`, spør kort («Du nevnte ikke Lese. Hvordan gikk det?»). Brukeren svarer med knappene ✅🟡❌, eller med et kort opptak via `/transcribe` og `/review/interpret`.
+4. Send alt til `/review/complete` med `reflection` = hele det brukeren sa. Det lagrer dagen og gir dagsrapporten.
+
+Feil på `/review/interpret-day`: `400 empty_text` og `502 interpretation_failed` (da kan brukeren svare med knappene). Rundt 1–2 sekunder.
 
 ### Logg
 | Metode | Sti | Svar |

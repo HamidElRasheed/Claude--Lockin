@@ -63,6 +63,22 @@ class Interpretation(ApiModel):
     reason: str | None = None
 
 
+class InterpretDayRequest(ApiModel):
+    text: str
+
+
+class DayGoal(ApiModel):
+    goal_id: str
+    goal_title: str
+    status: GoalStatus | None  # None = not mentioned, ask the user
+    reason: str | None = None
+
+
+class DayInterpretationResponse(ApiModel):
+    goals: list[DayGoal]
+    missing: list[str]  # goalIds the user did not mention
+
+
 class GoalEntry(ApiModel):
     goal_id: str
     goal_title: str

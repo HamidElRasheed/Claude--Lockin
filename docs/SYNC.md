@@ -20,6 +20,14 @@ Trenger: … / Ingen handling nødvendig
 
 ## Åpne
 
+### [BACKEND → APP] Ny kveldsflyt: snakk ÉN gang om hele dagen. Pluss to fikser i appen  (2026-11-07 19:30)
+Hva: Etter tester med folk vil vi endre kveldsgjennomgangen (beslutning fra Abdulahi):
+- **Vis alle dagens mål samtidig**, rent. Brukeren snakker **én gang** fritt om dagen (trykk for å starte og trykk for å stoppe passer bedre enn å holde inne ved lengre opptak).
+- Etter opptaket: `/transcribe` → **`POST /review/interpret-day {text}`** gir status og grunn for alle målene, og `missing` = målene som ikke ble nevnt. La målene krysses av med en rolig animasjon. Mål i `missing` løftes frem med et kort spørsmål og knappene ✅🟡❌ (eller et kort opptak via `/review/interpret`). Deretter `/review/complete` med `reflection` = hele det brukeren sa. Se `docs/API.md`, «Kveldsgjennomgang». Testet live: «gymmen» → Trene, «boka» → Lese, rundt 1–2 sekunder.
+- **Fiks 1 (pushet, i `src/lib/api.ts`):** Expo SDK 58 bytter ut den innebygde `fetch` med `expo/fetch`, som **ikke** støtter `{ uri, name, type }` i FormData. Derfor nådde lydopptakene aldri backend («Fikk ikke med meg det»). Nå brukes `new File(uri)` fra `expo-file-system`.
+- **Fiks 2 (pushet, i `src/lib/useVoiceRecorder.ts`):** opptakene er nå mono, 16 kHz, 32 kbps, i stedet for HIGH_QUALITY (stereo, 128 kbps). Det gir rundt 4 ganger mindre filer og raskere opplasting. Tips: forbered opptakeren allerede når skjermen åpnes, så første ord ikke kuttes.
+Trenger: Bygg om `review.tsx` til den nye flyten.
+
 ### [BACKEND → APP] Hver telefon får sine egne data: send `X-User-Id`  (2026-11-07)
 Hva: Backend leser nå den valgfrie headeren `X-User-Id` på alle endepunkter (se `docs/API.md`). Uten header brukes demobrukeren som før, så ingenting brekker.
 Trenger: Lag en UUID første gang appen åpnes, lagre den (for eksempel med `expo-secure-store`, som virker i Expo Go; installer med `npx expo install expo-secure-store`), og send den som `X-User-Id` i alle kall i `src/lib/api.ts`, også `/transcribe`. Gyldig: 8–64 tegn, `A-Z a-z 0-9 -` (en vanlig UUID passer). Merk: en ny ID starter tom, uten demouka. For pitchen kan dere sløyfe headeren for å vise seed-dataene.

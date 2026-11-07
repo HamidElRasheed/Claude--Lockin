@@ -83,6 +83,23 @@ def parse_goals(text: str) -> list[ParsedGoal]:
     return result.goals
 
 
+class DayGoalResult(BaseModel):
+    goalId: str  # noqa: N815
+    status: Literal["done", "partial", "missed", "not_mentioned"]
+    reason: str | None
+
+
+class DayInterpretation(BaseModel):
+    goals: list[DayGoalResult]
+
+
+def interpret_day(goals: list[tuple[str, str]], text: str) -> list[DayGoalResult]:
+    """One spoken summary of the whole day -> a status per goal. goals: [(id, title)]."""
+    listing = "\n".join(f"- goalId={goal_id}: {title}" for goal_id, title in goals)
+    content = f"Dagens mål:\n{listing}\n\nBrukeren sa: {text}"
+    return _parse("interpret_day", content, DayInterpretation, max_tokens=2048).goals
+
+
 class DailySummary(BaseModel):
     summary: str
     tomorrowTip: str  # noqa: N815
