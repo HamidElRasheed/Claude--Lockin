@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
+import { Icon } from '@/components/Icon';
+import { IconButton } from '@/components/IconButton';
 import { Orb, type OrbMode } from '@/components/Orb';
 import { Screen } from '@/components/Screen';
 import { StatusMark } from '@/components/StatusMark';
@@ -13,7 +15,7 @@ import { deleteRecording } from '@/lib/deleteRecording';
 import type { Goal, GoalEntry, GoalStatus } from '@/lib/types';
 import { MicPermissionError, useVoiceRecorder } from '@/lib/useVoiceRecorder';
 import { localDate } from '@/lib/words';
-import { palettes, space, type } from '@/theme';
+import { control, palettes, radius, space, type } from '@/theme';
 
 const palette = palettes.dusk;
 const MIN_HOLD_MS = 350;
@@ -133,9 +135,7 @@ export default function ReviewScreen() {
       <Pressable style={styles.fill} onPressIn={onPressIn} onPressOut={onPressOut} accessibilityHint="Hold inne hvor som helst for å snakke">
         <View style={styles.top}>
           <Progress total={goals.length + 1} current={index} />
-          <Pressable onPress={() => router.back()} hitSlop={16} accessibilityRole="button">
-            <Text style={styles.caption}>Lukk</Text>
-          </Pressable>
+          <IconButton tone="dusk" icon="xmark" label="Lukk kveldsgjennomgangen" onPress={() => router.back()} />
         </View>
 
         {stage === 'loading' ? null : isReflection ? (
@@ -161,12 +161,17 @@ export default function ReviewScreen() {
         <View style={styles.bottom}>
           {stage === 'ask' && (
             <>
-              <Text style={styles.hint}>{message ?? 'Hold hvor som helst for å snakke'}</Text>
-              {isReflection ? (
-                <Button tone="dusk" variant="quiet" label="Hopp over" onPress={() => finish(null)} />
-              ) : (
-                <Button tone="dusk" variant="quiet" label="Svar med knapper" onPress={() => setStage('manual')} />
-              )}
+              <View style={styles.holdChip} pointerEvents="none">
+                <Icon name="hand.tap" color={palette.orb} size={16} />
+                <Text style={styles.holdText}>{message ?? 'Hold hvor som helst og snakk'}</Text>
+              </View>
+              <View style={styles.center2}>
+                {isReflection ? (
+                  <Button tone="dusk" variant="text" label="Hopp over" onPress={() => finish(null)} />
+                ) : (
+                  <Button tone="dusk" variant="text" label="Svar med knapper i stedet" onPress={() => setStage('manual')} />
+                )}
+              </View>
             </>
           )}
 
@@ -194,8 +199,10 @@ export default function ReviewScreen() {
                 </Text>
               </View>
               <View style={styles.actions}>
-                <Button tone="dusk" label="Videre" onPress={() => commit(answer)} />
-                <Button tone="dusk" variant="quiet" label="Endre" onPress={() => setStage('manual')} />
+                <Button tone="dusk" label={index + 1 < goals.length ? 'Neste mål' : 'Videre'} onPress={() => commit(answer)} />
+                <View style={styles.center2}>
+                  <Button tone="dusk" variant="text" label="Det stemmer ikke, endre" onPress={() => setStage('manual')} />
+                </View>
               </View>
             </>
           )}
@@ -204,7 +211,7 @@ export default function ReviewScreen() {
             <>
               {reflection && <Text style={styles.transcript}>«{reflection}»</Text>}
               {message && <Text style={styles.hint}>{message}</Text>}
-              <Button tone="dusk" label="Ferdig for i dag" onPress={() => finish(reflection)} />
+              <Button tone="dusk" label="Ferdig for i dag" icon="moon.stars" onPress={() => finish(reflection)} />
             </>
           )}
         </View>
@@ -223,13 +230,20 @@ function Progress({ total, current }: { total: number; current: number }) {
   );
 }
 
+// Big, equal choices with the same calm status marks the log uses.
 function ManualButtons({ onPick }: { onPick: (status: GoalStatus) => void }) {
   return (
     <View style={styles.manual}>
       {(['done', 'partial', 'missed'] as const).map((status) => (
-        <View key={status} style={styles.manualItem}>
-          <Button tone="dusk" variant="outline" label={statusLabel[status]} onPress={() => onPick(status)} />
-        </View>
+        <Pressable
+          key={status}
+          accessibilityRole="button"
+          onPress={() => onPick(status)}
+          style={({ pressed }) => [styles.choice, pressed && styles.choicePressed]}
+        >
+          <StatusMark status={status} />
+          <Text style={styles.choiceText}>{statusLabel[status]}</Text>
+        </Pressable>
       ))}
     </View>
   );
@@ -248,7 +262,29 @@ const styles = StyleSheet.create({
   hint: { ...type.caption, color: palette.textMuted, textAlign: 'center' },
   transcript: { ...type.body, color: palette.text },
   status: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  actions: { flexDirection: 'row', gap: space.sm, alignItems: 'center' },
+  actions: { gap: space.xs, marginTop: space.sm },
+  center2: { alignItems: 'center' },
+  holdChip: {
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+    paddingHorizontal: space.md,
+    paddingVertical: space.sm + 2,
+    borderRadius: radius.pill,
+    backgroundColor: palette.tonal,
+  },
+  holdText: { ...type.body, color: palette.text, fontWeight: '500' },
   manual: { flexDirection: 'row', gap: space.sm },
-  manualItem: { flex: 1 },
+  choice: {
+    flex: 1,
+    minHeight: control.primaryHeight + 14,
+    borderRadius: radius.button,
+    backgroundColor: palette.tonal,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: space.sm,
+  },
+  choicePressed: { backgroundColor: palette.line },
+  choiceText: { ...type.body, color: palette.text, fontWeight: '500' },
 });

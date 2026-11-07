@@ -3,6 +3,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
+import { Icon } from '@/components/Icon';
+import { IconButton } from '@/components/IconButton';
 import { Screen } from '@/components/Screen';
 import { StatusMark } from '@/components/StatusMark';
 import { Voice } from '@/components/Voice';
@@ -40,7 +42,7 @@ export default function LogListScreen() {
     <Screen tone="dawn">
       <View style={styles.header}>
         <Voice tone="dawn">Dagene dine.</Voice>
-        <Button tone="dawn" variant="quiet" label="Lukk" onPress={() => router.back()} />
+        <IconButton icon="xmark" label="Lukk" onPress={() => router.back()} />
       </View>
 
       {state.kind === 'loading' && <Voice tone="dawn" muted>Et øyeblikk.</Voice>}
@@ -74,6 +76,7 @@ export default function LogListScreen() {
                   {item.entries.map((e) => (
                     <StatusMark key={e.goalId} status={e.status} tone="dawn" />
                   ))}
+                  <Icon name="chevron.right" color={palette.textMuted} size={13} />
                 </View>
               </View>
               <Text style={styles.summary} numberOfLines={2}>
@@ -95,6 +98,6 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.6 },
   rowTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   day: { ...type.body, color: palette.text, fontWeight: '600' },
-  marks: { flexDirection: 'row', gap: space.xs },
+  marks: { flexDirection: 'row', gap: space.xs, alignItems: 'center' },
   summary: { ...type.body, color: palette.textMuted },
 });

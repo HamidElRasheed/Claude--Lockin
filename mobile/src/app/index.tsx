@@ -82,7 +82,7 @@ function Ready({
           <Voice tone="dawn" muted>Ingen mål i dag. Nyt den.</Voice>
         </View>
         <View style={styles.footer}>
-          <Button tone="dawn" variant="outline" label="Sett opp mål" onPress={onSetup} />
+          <Button tone="dawn" label="Sett opp mål" onPress={onSetup} />
         </View>
       </>
     );
@@ -106,11 +106,18 @@ function Ready({
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.caption}>{today.reviewDone ? 'Kvelden er gjort.' : 'Vi snakkes i kveld.'}</Text>
+        {today.reviewDone ? (
+          <Text style={styles.caption}>Kvelden er gjort. Sov godt i natt.</Text>
+        ) : (
+          <Button tone="dawn" label="Start kvelden" icon="moon.stars" onPress={onReview} />
+        )}
         <View style={styles.links}>
-          {!today.reviewDone && <Button tone="dawn" variant="outline" label="Start kvelden" onPress={onReview} />}
-          <Button tone="dawn" variant="quiet" label="Uken din" onPress={onWeek} />
-          <Button tone="dawn" variant="quiet" label="Dagene" onPress={onLog} />
+          <View style={styles.half}>
+            <Button tone="dawn" variant="tonal" label="Uken din" icon="chart.line.uptrend.xyaxis" onPress={onWeek} fill />
+          </View>
+          <View style={styles.half}>
+            <Button tone="dawn" variant="tonal" label="Dagene" icon="book.closed" onPress={onLog} fill />
+          </View>
         </View>
       </View>
     </>
@@ -126,7 +133,8 @@ const styles = StyleSheet.create({
   timeFirst: { color: palette.text, fontWeight: '600' },
   goal: { ...type.body, color: palette.text },
   goalLater: { color: palette.textMuted },
-  footer: { marginTop: space.xxl, gap: space.md },
+  footer: { marginTop: space.xxl, gap: space.sm },
   caption: { ...type.caption, color: palette.textMuted },
-  links: { flexDirection: 'row', flexWrap: 'wrap', columnGap: space.md, alignItems: 'center' },
+  links: { flexDirection: 'row', gap: space.sm },
+  half: { flex: 1 },
 });
