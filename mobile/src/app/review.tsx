@@ -9,6 +9,7 @@ import { Screen } from '@/components/Screen';
 import { StatusMark } from '@/components/StatusMark';
 import { Voice } from '@/components/Voice';
 import { api, isMock } from '@/lib/api';
+import { deleteRecording } from '@/lib/deleteRecording';
 import type { Goal, GoalEntry, GoalStatus } from '@/lib/types';
 import { MicPermissionError, useVoiceRecorder } from '@/lib/useVoiceRecorder';
 import { localDate } from '@/lib/words';
@@ -69,6 +70,7 @@ export default function ReviewScreen() {
     const uri = await recorder.stop().catch(() => null);
 
     if (heldMs < MIN_HOLD_MS) {
+      deleteRecording(uri);
       setMessage('Hold inne mens du snakker.');
       setStage('ask');
       return;
@@ -81,7 +83,7 @@ export default function ReviewScreen() {
 
     setStage('thinking');
     try {
-      const { text } = await api.transcribe(uri ?? '');
+      const { text } = await api.transcribe(uri ?? '').finally(() => deleteRecording(uri));
       if (isReflection) {
         setReflection(text);
         setStage('answered');
