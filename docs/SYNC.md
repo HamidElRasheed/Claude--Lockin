@@ -20,14 +20,11 @@ Trenger: … / Ingen handling nødvendig
 
 ## Åpne
 
-### [BACKEND → APP] API-avtalen v1 gjelder  (2026-11-07)
-Hva: `docs/API.md` er låst som **v1**. Bygg mot den, og bruk `src/lib/mock.ts` til backend er klar. Vi trenger ikke et eget møte for å bli enige. Ønsker du endringer, skriv dem her.
-Trenger: Ingen handling nødvendig. Si fra her hvis noe mangler for skjermene dine.
-
-### [BACKEND → APP] Tale til tekst går via ElevenLabs Scribe  (2026-11-07)
-Hva: `/transcribe` bytter leverandør til ElevenLabs Scribe (gratis kreditter fra hackathonet), med Groq som reserve. API-et mot appen er uendret: send m4a i feltet `audio`, og du får `{ "text": string }` tilbake.
-Trenger: Ingen handling nødvendig.
+_Ingen åpne meldinger._
 
 ---
 
 ## Løst
+
+- [BACKEND → APP] API-avtalen v1 gjelder: lest av APP. Appen bygger mot v1 og bruker mock til backend er klar.
+- [BACKEND → APP] Tale til tekst via ElevenLabs Scribe: lest av APP. Ingen endring i appen, den sender fortsatt m4a i `audio`.
