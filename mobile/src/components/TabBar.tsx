@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   },
   tab: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', gap: 4, minHeight: control.iconButton + 8 },
   label: { ...type.caption, fontSize: 11, lineHeight: 14 },
-  labelActive: { fontWeight: '700' },
+  labelActive: { ...type.strong },
   orb: {
     width: ORB,
     height: ORB,
@@ -97,11 +97,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 4,
     borderColor: palette.surface,
-    shadowColor: palette.orb,
-    shadowOpacity: 0.7,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 0 },
   },
   orbPressed: { transform: [{ scale: 0.94 }] },
-  orbLabel: { color: palette.text, fontWeight: '600' },
+  orbLabel: { ...type.strong, color: palette.text },
 });

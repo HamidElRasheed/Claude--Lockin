@@ -96,7 +96,7 @@ function Ready({ today, onReview, onSetup }: { today: Today; onReview: () => voi
         {today.reviewDone ? (
           <Text style={styles.caption}>Kvelden er gjort. Sov godt i natt.</Text>
         ) : (
-          <Button tone="dawn" label="Start kvelden" icon="moon.stars" onPress={onReview} />
+          <Button tone="dawn" label="Start kvelden" onPress={onReview} />
         )}
       </View>
     </>
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   list: { marginTop: 'auto', gap: space.md },
   row: { flexDirection: 'row', alignItems: 'baseline', gap: space.md },
   time: { ...type.caption, width: 48, color: palette.textMuted, fontVariant: ['tabular-nums'] },
-  timeFirst: { color: palette.text, fontWeight: '600' },
+  timeFirst: { ...type.strong, color: palette.text },
   goal: { ...type.body, color: palette.text },
   goalLater: { color: palette.textMuted },
   footer: { marginTop: space.xxl, gap: space.sm },

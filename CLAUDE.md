@@ -169,9 +169,10 @@ npx expo install <pakke>        # bruk ALLTID denne i stedet for npm install <pa
 
 Designretningen heter **Pust** (se `DECISIONS.md`). Appen snakker til brukeren i rolige setninger, og brukeren snakker tilbake. Alle verdier ligger i `mobile/src/theme/`, og prototypen ligger på designlerretet i Claude.
 
-- **Appen «snakker» med serif.** Alt appen sier (spørsmål, svar, rapporter) skrives i systemets serif-skrift (`type.voice`, New York på iPhone) med komponenten `Voice`. Brukerens egne ord og resten av grensesnittet bruker systemfonten. Dette er de eneste to skriftene. Maks tre størrelser per skjerm.
+- **Appen «snakker» med serif.** Alt appen sier (spørsmål, svar, rapporter) skrives i **Newsreader** (`type.voice`) med komponenten `Voice`. Brukerens egne ord og resten av grensesnittet bruker **Familjen Grotesk** (`type.body`, `type.caption` og `type.strong`). Skriftene lastes i `src/app/_layout.tsx`. Vekt velges med `fonts.*`, aldri med `fontWeight`. Maks tre størrelser per skjerm.
 - **To stemninger, ikke en mørk modus:** `dawn` (lys og varm: morgen, ukesbrev, oppsett) og `dusk` (dyp blå skumring: kveldsgjennomgang og ferdig-skjermen). Fargene kommer bare fra `palettes` i temaet.
-- **Lyskulen (`Orb`) er den eneste pynten.** Den puster sakte og blir større og lysere mens brukeren snakker. Den myke gløden rundt kulen er den eneste gløden i appen. Ingen gradienter andre steder, og ingen lilla «AI-glød».
+- **Lyskulen (`Orb`) er den eneste pynten.** Den er en flat sirkel med en tynn ring som puster, og den blir større mens brukeren snakker. **Ingen glød, ingen skygger og ingen gradienter.**
+- **Rette hjørner.** Knapper og flater har nesten firkantede hjørner (`radius` = 2). Bare ekte sirkler, som kulen og statusmerkene, er runde. **Ingen avrundede kort:** innhold skilles med tynne linjer, og en seksjon får en mørk strek over seg i stedet for en boks.
 - **Trykk for å starte og stoppe; ett opptak for hele dagen** i kveldsgjennomgangen, med haptikk (`expo-haptics`) ved start og stopp. Appen krysser av målene den hørte og spør bare om dem som ikke ble nevnt. Det skal alltid gå an å svare med knapper.
 - **Ingen straff:** status vises med `StatusMark` (fylt, halv eller tom ring). Aldri rødt, aldri «du brøt rekka».
 - **Én ting per skjerm og én primærknapp.** Rolig og ren, med et 8-punkts rutenett (8, 16, 24, 32, 48, 72).

@@ -1,8 +1,6 @@
 // Design tokens for the "Pust" direction (see DECISIONS.md).
 // Never hardcode colors or sizes in components — import from here.
 
-import { Platform } from 'react-native';
-
 // Two fixed moods, not a user-facing dark mode:
 // dawn = morning, week letter, setup. dusk = evening review.
 export const palettes = {
@@ -49,12 +47,13 @@ export const space = {
   xxxl: 72,
 } as const;
 
+// Crisp, near-square corners everywhere. Only true circles (orb, status dots) are round.
 export const radius = {
-  sm: 8,
-  md: 14,
-  button: 18,
-  lg: 24,
-  pill: 999,
+  sm: 2,
+  md: 2,
+  button: 2,
+  lg: 2,
+  pill: 2,
 } as const;
 
 export const control = {
@@ -63,14 +62,20 @@ export const control = {
   iconButton: 44,
 } as const;
 
-// The app "speaks" in the system serif (New York on iOS).
-// The user's own words and all UI use the system sans.
-const serif = Platform.select({ ios: 'ui-serif', default: 'serif' });
+// The app "speaks" in Newsreader, an editorial serif. Everything else is Familjen Grotesk.
+// Custom fonts need one family per weight, so weight is chosen by family, never by fontWeight.
+export const fonts = {
+  voice: 'Newsreader_400Regular',
+  ui: 'FamiljenGrotesk_400Regular',
+  uiMedium: 'FamiljenGrotesk_500Medium',
+  uiBold: 'FamiljenGrotesk_600SemiBold',
+} as const;
 
 export const type = {
-  voice: { fontFamily: serif, fontSize: 32, fontWeight: '400' as const, lineHeight: 40, letterSpacing: -0.3 },
-  body: { fontSize: 17, fontWeight: '400' as const, lineHeight: 25 },
-  caption: { fontSize: 13, fontWeight: '500' as const, lineHeight: 18 },
+  voice: { fontFamily: fonts.voice, fontSize: 32, lineHeight: 38, letterSpacing: -0.4 },
+  body: { fontFamily: fonts.ui, fontSize: 17, lineHeight: 24 },
+  caption: { fontFamily: fonts.uiMedium, fontSize: 13, lineHeight: 18, letterSpacing: 0.1 },
+  strong: { fontFamily: fonts.uiBold },
 } as const;
 
 export const orb = {

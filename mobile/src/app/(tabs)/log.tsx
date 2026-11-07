@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
   row: { paddingVertical: space.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: palette.line, gap: space.xs },
   pressed: { opacity: 0.6 },
   rowTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  day: { ...type.body, color: palette.text, fontWeight: '600' },
+  day: { ...type.body, ...type.strong, color: palette.text },
   marks: { flexDirection: 'row', gap: space.xs, alignItems: 'center' },
   summary: { ...type.body, color: palette.textMuted },
 });

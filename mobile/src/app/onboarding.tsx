@@ -9,7 +9,7 @@ import { Voice } from '@/components/Voice';
 import { ApiError, api } from '@/lib/api';
 import type { GoalDraft } from '@/lib/types';
 import { formatDays } from '@/lib/words';
-import { palettes, radius, space, type } from '@/theme';
+import { palettes, space, type } from '@/theme';
 
 const palette = palettes.dawn;
 
@@ -122,7 +122,7 @@ export default function OnboardingScreen() {
                 disabled={drafts.length === 0}
               />
               <View style={styles.center}>
-                <Button tone="dawn" variant="text" label="Skriv på nytt" icon="square.and.pencil" onPress={() => setStage('write')} />
+                <Button tone="dawn" variant="text" label="Skriv på nytt" onPress={() => setStage('write')} />
               </View>
             </View>
           </>
@@ -142,22 +142,23 @@ const styles = StyleSheet.create({
     color: palette.text,
     marginTop: space.xl,
     minHeight: 120,
-    padding: space.md,
-    borderRadius: radius.md,
-    backgroundColor: palette.surface,
+    paddingVertical: space.md,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: palette.text,
     textAlignVertical: 'top',
   },
   message: { ...type.body, color: palette.text, marginTop: space.md },
   footer: { marginTop: 'auto', gap: space.sm, paddingTop: space.md },
-  cards: { gap: space.sm, paddingTop: space.xl },
+  cards: { paddingTop: space.xl },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: space.md,
-    borderRadius: radius.md,
-    backgroundColor: palette.surface,
+    paddingVertical: space.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: palette.line,
     gap: space.md,
   },
   cardText: { flex: 1, gap: 2 },
-  title: { ...type.body, color: palette.text, fontWeight: '600' },
+  title: { ...type.body, ...type.strong, color: palette.text },
 });

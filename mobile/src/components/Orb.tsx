@@ -43,7 +43,7 @@ export function Orb({ mode = 'idle', tone = 'dusk', size = orb.size }: Props) {
   const breath = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, mode === 'listening' ? 1.1 : 1.06] });
   const haloOpacity = pulse.interpolate({
     inputRange: [0, 1],
-    outputRange: mode === 'listening' ? [0.4, 0.65] : [0.22, 0.38],
+    outputRange: mode === 'listening' ? [0.6, 1] : [0.25, 0.5],
   });
   const scale = Animated.multiply(base, breath);
   const halo = size * 1.9;
@@ -53,7 +53,7 @@ export function Orb({ mode = 'idle', tone = 'dusk', size = orb.size }: Props) {
       <Animated.View
         style={[
           styles.circle,
-          { width: halo, height: halo, borderRadius: halo / 2, backgroundColor: palette.orbGlow, opacity: haloOpacity, transform: [{ scale }] },
+          { width: halo, height: halo, borderRadius: halo / 2, borderWidth: 1, borderColor: palette.orb, opacity: haloOpacity, transform: [{ scale }] },
         ]}
       />
       <Animated.View
@@ -64,10 +64,8 @@ export function Orb({ mode = 'idle', tone = 'dusk', size = orb.size }: Props) {
             height: size,
             borderRadius: size / 2,
             backgroundColor: palette.orb,
-            shadowColor: palette.orb,
             transform: [{ scale }],
           },
-          styles.glow,
         ]}
       />
     </View>
@@ -77,5 +75,4 @@ export function Orb({ mode = 'idle', tone = 'dusk', size = orb.size }: Props) {
 const styles = StyleSheet.create({
   wrap: { alignItems: 'center', justifyContent: 'center' },
   circle: { position: 'absolute' },
-  glow: { shadowOpacity: 0.8, shadowRadius: 40, shadowOffset: { width: 0, height: 0 } },
 });

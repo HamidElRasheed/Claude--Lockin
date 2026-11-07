@@ -8,7 +8,7 @@ import { Voice } from '@/components/Voice';
 import { ApiError, api } from '@/lib/api';
 import type { WeeklyReport } from '@/lib/types';
 import { isoWeek } from '@/lib/words';
-import { palettes, radius, space, type } from '@/theme';
+import { palettes, space, type } from '@/theme';
 
 const palette = palettes.dawn;
 
@@ -157,9 +157,9 @@ const styles = StyleSheet.create({
   letter: { gap: space.lg, paddingBottom: space.lg },
   footer: { gap: space.sm, paddingTop: space.md },
   body: { ...type.body, color: palette.text },
-  card: { backgroundColor: palette.surface, borderRadius: radius.lg, padding: space.lg, gap: space.sm, marginTop: space.md },
+  card: { borderTopWidth: 1, borderTopColor: palette.text, paddingTop: space.md, gap: space.sm, marginTop: space.md },
   cardLabel: { ...type.caption, color: palette.textMuted },
-  cardText: { ...type.body, color: palette.text, fontWeight: '600' },
+  cardText: { ...type.body, ...type.strong, color: palette.text },
   actions: { gap: space.xs, marginTop: space.sm },
   center: { alignItems: 'center' },
 });
