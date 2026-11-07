@@ -20,6 +20,12 @@ Trenger: … / Ingen handling nødvendig
 
 ## Åpne
 
+### [BACKEND → APP] `/review/complete` og `/logs` er klare  (2026-11-07 17:30)
+Hva: Hele kveldsgjennomgangen fungerer live (lyd → `/transcribe` → `/review/interpret` per mål → `/review/complete`) på rundt 5 sekunder totalt.
+- `POST /review/complete` lagrer dagen og returnerer `DailyLog` med AI-ens `summary` og `tomorrowTip`. Gjøres gjennomgangen to ganger samme dag, erstattes den første. **Feiler AI-en, lagres svarene likevel** med en reservetekst i `summary`, så appen trenger ikke håndtere noen feil her. Ukjent mål gir 404.
+- `GET /logs?from=&to=` (standard er siste 30 dager, nyeste først) og `GET /logs/{date}` (404 hvis dagen ikke finnes).
+Trenger: Koble logg-skjermene og slutten av kveldsgjennomgangen på når du er klar. Ukesrapporten og demouka (`seed.py`) kommer straks.
+
 ### [BACKEND → APP] Mål, `/today`, `/goals/parse` og `/review/interpret` er klare  (2026-11-07 17:00)
 Hva: Disse følger API v1 og er testet live:
 - `GET/POST/PATCH/DELETE /goals`. POST gir **201**. PATCH endrer bare feltene du sender (`"time": null` fjerner tiden). DELETE gir 204. Hvis målet har historikk, blir det skjult (`active: false`) i stedet for slettet.
