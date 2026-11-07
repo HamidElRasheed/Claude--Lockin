@@ -6,7 +6,8 @@ import pytest
 
 # Tests use their own throwaway SQLite file, never the dev database.
 # Must be set before app.config is imported.
-_TEST_DB = Path(tempfile.gettempdir()) / "lockin-test.db"
+# One file per test process, so several agents/worktrees can run pytest at the same time.
+_TEST_DB = Path(tempfile.gettempdir()) / f"lockin-test-{os.getpid()}.db"
 _TEST_DB.unlink(missing_ok=True)
 os.environ["DATABASE_URL"] = f"sqlite:///{_TEST_DB.as_posix()}"
 
