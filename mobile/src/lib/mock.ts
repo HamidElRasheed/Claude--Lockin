@@ -1,7 +1,16 @@
 // Mock data with exactly the same shape as the API (docs/API.md).
 // Used while EXPO_PUBLIC_USE_MOCK is not "false".
 
-import type { DailyLog, Goal, GoalDraft, GoalEntry, Interpretation, Today, WeeklyReport } from './types';
+import type {
+  DailyLog,
+  DayInterpretation,
+  Goal,
+  GoalDraft,
+  GoalEntry,
+  Interpretation,
+  Today,
+  WeeklyReport,
+} from './types';
 
 export const mockGoals: Goal[] = [
   { id: 'g1', title: 'Trene', days: ['mon', 'wed', 'fri'], time: '07:00', weeklyTarget: 3, active: true },
@@ -42,12 +51,11 @@ export const mockWeeklyReport: WeeklyReport = {
   ],
 };
 
-// Canned answers so the evening review can be demoed without a backend.
+// Canned answers so the evening review can be demoed without a backend:
+// first the whole day in one go, then a short answer about the goal that was not mentioned.
 const mockAnswers = [
-  'Nei, ble sittende sent på jobb igjen, så jeg rakk det ikke.',
-  'Litt, kanskje ti minutter før jeg sovnet.',
-  'Ja, la den i stua halv elleve.',
-  'Lang dag, men jeg fikk ro på kvelden.',
+  'Kom meg på trening i morges før jobb. Leste litt, kanskje ti minutter før jeg sovnet. Lang dag, men jeg fikk ro på kvelden.',
+  'Ja, la mobilen i stua før elleve.',
 ];
 let answerIndex = 0;
 
@@ -57,10 +65,21 @@ export function mockTranscribe(): { text: string } {
   return { text };
 }
 
+// First goal done, second partial with a reason, the rest not mentioned (asked about after).
+export function mockInterpretDay(goals: Goal[]): DayInterpretation {
+  const day = goals.map((goal, i) => ({
+    goalId: goal.id,
+    goalTitle: goal.title,
+    status: i === 0 ? ('done' as const) : i === 1 ? ('partial' as const) : null,
+    reason: i === 0 ? 'trente før jobb' : i === 1 ? 'bare ti minutter' : null,
+  }));
+  return { goals: day, missing: day.filter((g) => g.status === null).map((g) => g.goalId) };
+}
+
 export function mockInterpret(text: string): Interpretation {
   const lower = text.toLowerCase();
-  if (/\b(nei|ikke|rakk)\b/.test(lower)) return { status: 'missed', reason: 'Jobbet sent' };
-  if (/\b(litt|delvis|halv|bare)\b/.test(lower)) return { status: 'partial', reason: 'Bare ti minutter' };
+  if (/(nei|ikke|rakk)/.test(lower)) return { status: 'missed', reason: 'jobbet sent' };
+  if (/(litt|delvis|halv|bare)/.test(lower)) return { status: 'partial', reason: 'bare litt' };
   return { status: 'done', reason: null };
 }
 

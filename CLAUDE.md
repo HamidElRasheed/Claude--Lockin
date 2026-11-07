@@ -172,7 +172,7 @@ Designretningen heter **Pust** (se `DECISIONS.md`). Appen snakker til brukeren i
 - **Appen «snakker» med serif.** Alt appen sier (spørsmål, svar, rapporter) skrives i systemets serif-skrift (`type.voice`, New York på iPhone) med komponenten `Voice`. Brukerens egne ord og resten av grensesnittet bruker systemfonten. Dette er de eneste to skriftene. Maks tre størrelser per skjerm.
 - **To stemninger, ikke en mørk modus:** `dawn` (lys og varm: morgen, ukesbrev, oppsett) og `dusk` (dyp blå skumring: kveldsgjennomgang og ferdig-skjermen). Fargene kommer bare fra `palettes` i temaet.
 - **Lyskulen (`Orb`) er den eneste pynten.** Den puster sakte og blir større og lysere mens brukeren snakker. Den myke gløden rundt kulen er den eneste gløden i appen. Ingen gradienter andre steder, og ingen lilla «AI-glød».
-- **Hold hvor som helst for å snakke** i kveldsgjennomgangen, med haptikk (`expo-haptics`) når du trykker og slipper. Det skal alltid gå an å svare med knapper.
+- **Trykk for å starte og stoppe; ett opptak for hele dagen** i kveldsgjennomgangen, med haptikk (`expo-haptics`) ved start og stopp. Appen krysser av målene den hørte og spør bare om dem som ikke ble nevnt. Det skal alltid gå an å svare med knapper.
 - **Ingen straff:** status vises med `StatusMark` (fylt, halv eller tom ring). Aldri rødt, aldri «du brøt rekka».
 - **Én ting per skjerm og én primærknapp.** Rolig og ren, med et 8-punkts rutenett (8, 16, 24, 32, 48, 72).
 - **Ingen emoji som ikoner**, ingen kort-i-kort og ingen tunge skygger.

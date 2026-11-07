@@ -7,6 +7,7 @@ import {
   mockCreateGoal,
   mockGoals,
   mockInterpret,
+  mockInterpretDay,
   mockLogs,
   mockParseGoals,
   mockToday,
@@ -98,7 +99,9 @@ export const api = {
   },
 
   interpretDay: (text: string): Promise<DayInterpretation> =>
-    request('/review/interpret-day', send('POST', { text })),
+    USE_MOCK
+      ? later(mockInterpretDay(mockToday.goals), 1200)
+      : request('/review/interpret-day', send('POST', { text })),
 
   interpret: (goalId: string, text: string): Promise<Interpretation> =>
     USE_MOCK ? later(mockInterpret(text), 600) : request('/review/interpret', send('POST', { goalId, text })),
