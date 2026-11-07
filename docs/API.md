@@ -5,8 +5,13 @@ Dette er kilden til sannhet. Backend (`backend/app/schemas.py`) og appen (`mobil
 - Base-URL: `EXPO_PUBLIC_API_URL`, for eksempel `http://192.168.1.20:8000`
 - Alt sendes og mottas som JSON, med unntak av `/transcribe`, som tar imot en lydfil.
 - Datoer er på formatet `YYYY-MM-DD`, uker på `YYYY-Www` (ISO-uke, for eksempel `2026-W45`), og tidspunkter på `HH:MM`.
-- Hackathon-versjonen har ingen innlogging. Backend bruker en fast demobruker.
+- Hackathon-versjonen har ingen innlogging. Hver telefon identifiseres med headeren `X-User-Id` (se under).
 - Feil returneres alltid slik: `{ "error": { "code": "string", "message": "string" } }`
+
+### Bruker: headeren `X-User-Id` (valgfri)
+- Appen lager en tilfeldig ID (UUID) første gang den åpnes, lagrer den og sender den som `X-User-Id` med **hver** forespørsel. Hver ID får sine egne mål, logger og rapporter.
+- Gyldig: 8–64 tegn, bare `A-Z a-z 0-9 -`. Ugyldig gir `400` med koden `invalid_user_id`.
+- Mangler headeren, brukes demobrukeren (den samme som `seed.py` fyller med data).
 
 ---
 

@@ -20,6 +20,10 @@ Trenger: … / Ingen handling nødvendig
 
 ## Åpne
 
+### [BACKEND → APP] Hver telefon får sine egne data: send `X-User-Id`  (2026-11-07)
+Hva: Backend leser nå den valgfrie headeren `X-User-Id` på alle endepunkter (se `docs/API.md`). Uten header brukes demobrukeren som før, så ingenting brekker.
+Trenger: Lag en UUID første gang appen åpnes, lagre den (for eksempel med `expo-secure-store`, som virker i Expo Go; installer med `npx expo install expo-secure-store`), og send den som `X-User-Id` i alle kall i `src/lib/api.ts`, også `/transcribe`. Gyldig: 8–64 tegn, `A-Z a-z 0-9 -` (en vanlig UUID passer). Merk: en ny ID starter tom, uten demouka. For pitchen kan dere sløyfe headeren for å vise seed-dataene.
+
 ### [APP → BACKEND] Appen er koblet til hele API v1. Klar for test på iPhonen  (2026-11-07)
 Hva: Med `EXPO_PUBLIC_USE_MOCK=false` bruker appen nå alle endepunktene: `/today`, `/goals` (+ `/goals/parse` i oppsettet), `/transcribe` → `/review/interpret` → `/review/complete`, `/logs` og `/logs/{date}`, og ukesrapporten for **forrige uke**, med `generate` hvis GET gir 404, slik du foreslo. Lydfilen slettes på telefonen rett etter `/transcribe`, også ved feil. `no_logs_for_week` vises som en tom tilstand.
 Testet: mot din backend kjørt lokalt hos meg med `seed.py`, men uten nøkler. `/today`, `/goals` og `/logs` svarte riktig. AI- og tale-endepunktene er ikke testet fordi jeg ikke har nøklene.

@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app import models
-from app.config import settings
+from app.auth import current_user_id
 from app.db import get_db
 from app.schemas import Goal, GoalDraft, GoalUpdate, ParseGoalsRequest
 from app.services import ai
@@ -13,11 +13,11 @@ from app.services import ai
 router = APIRouter(prefix="/goals", tags=["goals"])
 
 
-def _get_own_goal(db: Session, goal_id: str) -> models.Goal:
+def _get_own_goal(db: Session, goal_id: str, user_id: str) -> models.Goal:
     """Fetch a goal that belongs to the current user, or 404."""
     goal = db.scalar(
         select(models.Goal).where(
-            models.Goal.id == goal_id, models.Goal.user_id == settings.demo_user_id
+            models.Goal.id == goal_id, models.Goal.user_id == user_id
         )
     )
     if goal is None:
@@ -26,20 +26,27 @@ def _get_own_goal(db: Session, goal_id: str) -> models.Goal:
 
 
 @router.get("", response_model=list[Goal], response_model_by_alias=True)
-def list_goals(db: Session = Depends(get_db)) -> list[models.Goal]:
+def list_goals(
+    db: Session = Depends(get_db),
+    user_id: str = Depends(current_user_id),
+) -> list[models.Goal]:
     return list(
         db.scalars(
             select(models.Goal)
-            .where(models.Goal.user_id == settings.demo_user_id)
+            .where(models.Goal.user_id == user_id)
             .order_by(models.Goal.time.is_(None), models.Goal.time, models.Goal.created_at)
         )
     )
 
 
 @router.post("", response_model=Goal, response_model_by_alias=True, status_code=201)
-def create_goal(draft: GoalDraft, db: Session = Depends(get_db)) -> models.Goal:
+def create_goal(
+    draft: GoalDraft,
+    db: Session = Depends(get_db),
+    user_id: str = Depends(current_user_id),
+) -> models.Goal:
     goal = models.Goal(
-        user_id=settings.demo_user_id,
+        user_id=user_id,
         title=draft.title,
         days=list(dict.fromkeys(draft.days)),  # remove duplicates, keep order
         time=draft.time,
@@ -53,8 +60,13 @@ def create_goal(draft: GoalDraft, db: Session = Depends(get_db)) -> models.Goal:
 
 
 @router.patch("/{goal_id}", response_model=Goal, response_model_by_alias=True)
-def update_goal(goal_id: str, update: GoalUpdate, db: Session = Depends(get_db)) -> models.Goal:
-    goal = _get_own_goal(db, goal_id)
+def update_goal(
+    goal_id: str,
+    update: GoalUpdate,
+    db: Session = Depends(get_db),
+    user_id: str = Depends(current_user_id),
+) -> models.Goal:
+    goal = _get_own_goal(db, goal_id, user_id)
     # Only fields the app actually sent are changed (so "time": null can clear a time).
     for field, value in update.model_dump(exclude_unset=True).items():
         if field == "days" and value is not None:
@@ -66,8 +78,12 @@ def update_goal(goal_id: str, update: GoalUpdate, db: Session = Depends(get_db))
 
 
 @router.delete("/{goal_id}", status_code=204)
-def delete_goal(goal_id: str, db: Session = Depends(get_db)) -> Response:
-    goal = _get_own_goal(db, goal_id)
+def delete_goal(
+    goal_id: str,
+    db: Session = Depends(get_db),
+    user_id: str = Depends(current_user_id),
+) -> Response:
+    goal = _get_own_goal(db, goal_id, user_id)
     has_history = db.scalar(select(models.GoalEntry.id).where(models.GoalEntry.goal_id == goal.id))
     if has_history:
         # Keep history intact: logs point to this goal. Hide it instead of deleting.

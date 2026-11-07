@@ -31,6 +31,7 @@ Eiere: **APP** = HamidElRasheed (`mobile/`, branch `app/arbeid`), **BACKEND** = 
 ## Fase 3: Logg, ukesrapport og oppsett (søndag morgen)
 - [x] `/logs` og `/reports/weekly` med generering (BACKEND)
 - [x] `seed.py` med en realistisk demouke, der onsdagsmønsteret for trening er med (BACKEND). Kjør `python seed.py` og generer deretter forrige uke
+- [ ] Hver telefon får egne data via headeren `X-User-Id`, med demobrukeren som standard (BACKEND). Ferdig på `backend/enhetsbruker` og venter på merge. Appen må sende headeren (APP, se SYNC.md)
 - [ ] Backend tilgjengelig for iPhonen på stedet (LAN-IP eller tunnel) (BACKEND)
 - [ ] Finpuss: dagsrapporten skal bruke brukerens egne tall, ikke målnavnet («lest en halvtime», ikke «20 min») (BACKEND)
 - [x] Skjermene for dagslogg og ukesrapport (APP)

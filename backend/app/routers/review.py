@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app import models
-from app.config import settings
+from app.auth import current_user_id
 from app.db import get_db
 from app.schemas import CompleteReviewRequest, DailyLog, InterpretRequest, Interpretation
 from app.services import ai
@@ -20,10 +20,14 @@ FALLBACK_SUMMARY = "Dagen er lagret. Oppsummeringen kunne ikke lages akkurat nå
 
 
 @router.post("/interpret", response_model=Interpretation, response_model_by_alias=True)
-async def interpret(body: InterpretRequest, db: Session = Depends(get_db)) -> Interpretation:
+async def interpret(
+    body: InterpretRequest,
+    db: Session = Depends(get_db),
+    user_id: str = Depends(current_user_id),
+) -> Interpretation:
     goal = db.scalar(
         select(models.Goal).where(
-            models.Goal.id == body.goal_id, models.Goal.user_id == settings.demo_user_id
+            models.Goal.id == body.goal_id, models.Goal.user_id == user_id
         )
     )
     if goal is None:
@@ -40,12 +44,16 @@ async def interpret(body: InterpretRequest, db: Session = Depends(get_db)) -> In
 
 
 @router.post("/complete", response_model=DailyLog, response_model_by_alias=True)
-async def complete(body: CompleteReviewRequest, db: Session = Depends(get_db)) -> DailyLog:
+async def complete(
+    body: CompleteReviewRequest,
+    db: Session = Depends(get_db),
+    user_id: str = Depends(current_user_id),
+) -> DailyLog:
     day = parse_date(body.date)
 
     # Only accept the user's own goals.
     own_ids = set(
-        db.scalars(select(models.Goal.id).where(models.Goal.user_id == settings.demo_user_id))
+        db.scalars(select(models.Goal.id).where(models.Goal.user_id == user_id))
     )
     unknown = [e.goal_id for e in body.entries if e.goal_id not in own_ids]
     if unknown:
@@ -54,11 +62,11 @@ async def complete(body: CompleteReviewRequest, db: Session = Depends(get_db)) -
     # One log per user per day: doing the review again replaces the earlier one.
     daily = db.scalar(
         select(models.DailyLog).where(
-            models.DailyLog.user_id == settings.demo_user_id, models.DailyLog.date == day
+            models.DailyLog.user_id == user_id, models.DailyLog.date == day
         )
     )
     if daily is None:
-        daily = models.DailyLog(user_id=settings.demo_user_id, date=day)
+        daily = models.DailyLog(user_id=user_id, date=day)
         db.add(daily)
     daily.reflection = body.reflection
     daily.entries = [
