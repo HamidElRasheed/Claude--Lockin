@@ -1,5 +1,6 @@
 """Demo data: `python seed.py` wipes the demo user's data and creates goals plus logs for
-the previous ISO week and the days of this week before today. Safe to run again."""
+the previous ISO week and the days of this week before today, then pre-generates last
+week's AI report so the week screen opens instantly (`--no-report` skips it). Safe to run again."""
 
 from datetime import date, timedelta
 
@@ -172,7 +173,25 @@ def run(user_id: str | None = None) -> dict[str, int]:
     return {"goals": len(goals), "logs": n_logs, "entries": n_entries}
 
 
+def pregenerate_report(week: str) -> str:
+    """Write last week's report now (one AI call), so the week screen opens instantly
+    instead of waiting ~6 s on first visit. Skipped without an API key or on AI failure."""
+    from app.services import weekly
+    from app.services.ai import AIError
+
+    if not settings.anthropic_api_key:
+        return "skipped (no ANTHROPIC_API_KEY)"
+    try:
+        with SessionLocal() as db:
+            weekly.generate(db, settings.demo_user_id, week)
+        return "ready"
+    except (AIError, weekly.NoLogsError) as exc:
+        return f"skipped ({type(exc).__name__})"
+
+
 def main() -> None:
+    import sys
+
     today = clock.today()
     counts = run()
     days = seed_days(today)
@@ -181,7 +200,11 @@ def main() -> None:
     print(f"  {counts['logs']} daily logs, {counts['entries']} goal entries")
     print(f"  from {days[0][0].isoformat()} to {days[-1][0].isoformat()}")
     prev_year, prev_week, _ = (today - timedelta(days=7)).isocalendar()
-    print(f"  try: POST /reports/weekly/generate {{\"week\": \"{prev_year}-W{prev_week:02d}\"}}")
+    week = f"{prev_year}-W{prev_week:02d}"
+    if "--no-report" in sys.argv:
+        print(f"  weekly report {week}: not generated (--no-report)")
+    else:
+        print(f"  weekly report {week}: {pregenerate_report(week)}")
 
 
 if __name__ == "__main__":
