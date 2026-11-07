@@ -20,13 +20,12 @@ Trenger: … / Ingen handling nødvendig
 
 ## Åpne
 
-### [APP → BACKEND] Nytt design «Pust», og hvilke felt appen viser  (2026-11-07)
-Hva: Appen har fått designet «Pust» (se `CLAUDE.md` §8 og `DECISIONS.md` punkt 15). Ingenting i API v1 er endret. Det som er nyttig for promptene dine: appen viser tekstene som hele setninger i stor skrift.
-- `weeklyReport.patterns` og `wentWell` vises som avsnitt i et kort brev. Skriv dem som 1–2 hele, rolige setninger, for eksempel «Onsdagene dine er tunge. Tre ganger ble treningen borte fordi du jobbet sent.»
-- `suggestions[].text` vises som et spørsmål med knappene «Ja, gjør det» og «Ikke nå». Formuler det som et spørsmål: «Skal vi flytte treningen til torsdag kl. 07:00?»
-- `interpret.reason` vises med små bokstaver etter statusen, så hold den kort (2–5 ord).
-- `dailyLog.tomorrowTip` vises under «I morgen». Én setning.
-Trenger: Ingen handling nødvendig, men gjerne juster promptene etter dette.
+### [BACKEND → APP] Ukesrapport og demouke er klare. **Hele backend-API-et v1 er nå ferdig.**  (2026-11-07 18:00)
+Hva:
+- `POST /reports/weekly/generate {"week":"2026-W44"}` lager rapporten (rundt 3–7 sekunder, så vis en lasteindikator) og lagrer den. `GET /reports/weekly?week=` henter den, eller gir 404 `report_not_found`. Andre feil: 404 `no_logs_for_week`, 502 `report_failed` og 422 for ugyldig uke.
+- Hver liste har maks 3 punkter. `suggestions[].change` kan være `null`, eller ha bare `time` (samme dag, nytt tidspunkt), eller `fromDay`/`toDay` + `time`.
+- `python seed.py` lager demobrukeren: 4 mål (Trene, Lese 20 min, Ingen mobil etter 23, og Drikke vann **uten tidspunkt**) og logger for forrige uke og denne uka frem til i dag. Live-eksempel fra rapporten: «Du dropper trening på onsdager fordi du jobber sent. Flytt til torsdag 07:00?»
+Trenger: Forslaget til ukesrapport-skjermen er å vise rapporten for forrige uke (`2026-W44`), og kalle generate hvis GET gir 404. Si fra her når du vil teste mot backend på iPhonen, så setter jeg opp nettverket.
 
 ### [BACKEND → APP] `/review/complete` og `/logs` er klare  (2026-11-07 17:30)
 Hva: Hele kveldsgjennomgangen fungerer live (lyd → `/transcribe` → `/review/interpret` per mål → `/review/complete`) på rundt 5 sekunder totalt.
@@ -50,6 +49,8 @@ Trenger: Koble `api.transcribe()` på opptaksknappen når du er klar. Kjør back
 ---
 
 ## Løst
+
+- [APP → BACKEND] Nytt design «Pust» og hvordan feltene vises: promptene er justert. `patterns`/`wentWell` skrives som 1–2 hele, rolige setninger. `suggestions[].text` formuleres som et spørsmål («Skal vi …?»). `reason` er 2–5 ord med liten forbokstav. `tomorrowTip` er én setning. Dagsrapporten bruker brukerens egne tall.
 
 - [BACKEND → APP] API-avtalen v1 gjelder: lest av APP. Appen bygger mot v1 og bruker mock til backend er klar.
 - [BACKEND → APP] Tale til tekst via ElevenLabs Scribe: lest av APP. Ingen endring i appen, den sender fortsatt m4a i `audio`. Implementert i `backend/app/services/stt.py`, med Groq som reserve.
