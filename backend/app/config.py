@@ -7,9 +7,17 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     database_url: str = "sqlite:///./lockin.db"
-    openai_api_key: str = ""
-    stt_model: str = "gpt-4o-transcribe"
-    stt_language: str = "no"
+
+    # Speech-to-text, primary: ElevenLabs Scribe
+    elevenlabs_api_key: str = ""
+    elevenlabs_stt_model: str = "scribe_v2"
+    elevenlabs_language: str = "nor"  # ISO 639-3, as listed in the ElevenLabs docs
+
+    # Speech-to-text, fallback: Groq Whisper (free tier, OpenAI-compatible API)
+    groq_api_key: str = ""
+    groq_stt_model: str = "whisper-large-v3"
+    groq_language: str = "no"  # ISO 639-1
+
     # Hackathon: no auth, one fixed demo user.
     demo_user_id: str = "demo"
 
