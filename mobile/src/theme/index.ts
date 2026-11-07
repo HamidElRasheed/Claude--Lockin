@@ -62,20 +62,14 @@ export const control = {
   iconButton: 44,
 } as const;
 
-// The app "speaks" in Newsreader, an editorial serif. Everything else is Familjen Grotesk.
-// Custom fonts need one family per weight, so weight is chosen by family, never by fontWeight.
-export const fonts = {
-  voice: 'Newsreader_400Regular',
-  ui: 'FamiljenGrotesk_400Regular',
-  uiMedium: 'FamiljenGrotesk_500Medium',
-  uiBold: 'FamiljenGrotesk_600SemiBold',
-} as const;
-
+// One typeface: the system font (SF Pro on iPhone). Hierarchy comes from size and weight only.
+// title = what the app says, lead = its quieter follow-up line.
 export const type = {
-  voice: { fontFamily: fonts.voice, fontSize: 32, lineHeight: 38, letterSpacing: -0.4 },
-  body: { fontFamily: fonts.ui, fontSize: 17, lineHeight: 24 },
-  caption: { fontFamily: fonts.uiMedium, fontSize: 13, lineHeight: 18, letterSpacing: 0.1 },
-  strong: { fontFamily: fonts.uiBold },
+  title: { fontSize: 34, fontWeight: '700' as const, lineHeight: 40, letterSpacing: -0.8 },
+  lead: { fontSize: 20, fontWeight: '400' as const, lineHeight: 26, letterSpacing: -0.3 },
+  body: { fontSize: 17, fontWeight: '400' as const, lineHeight: 22, letterSpacing: -0.2 },
+  caption: { fontSize: 13, fontWeight: '500' as const, lineHeight: 18 },
+  strong: { fontWeight: '600' as const },
 } as const;
 
 export const orb = {

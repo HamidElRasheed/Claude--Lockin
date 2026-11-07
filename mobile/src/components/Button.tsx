@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Icon } from '@/components/Icon';
-import { control, fonts, palettes, radius, space, type Tone, type } from '@/theme';
+import { control, palettes, radius, space, type Tone, type } from '@/theme';
 
 type Variant = 'primary' | 'tonal' | 'text';
 
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
   primary: { minHeight: control.primaryHeight },
   text: { paddingHorizontal: space.sm, minHeight: control.iconButton },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  label: { ...type.body, fontFamily: fonts.uiMedium },
+  label: { ...type.body, fontWeight: '500' },
   strong: { ...type.strong },
   pressed: { opacity: 0.88 },
   inactive: { opacity: 0.45 },
