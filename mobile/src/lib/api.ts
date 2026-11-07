@@ -1,5 +1,7 @@
 // All backend calls go through this file. Screens never call fetch directly.
 
+import { File } from 'expo-file-system';
+
 import {
   mockCompleteReview,
   mockCreateGoal,
@@ -13,6 +15,7 @@ import {
 } from './mock';
 import type {
   DailyLog,
+  DayInterpretation,
   Goal,
   GoalDraft,
   GoalEntry,
@@ -86,10 +89,14 @@ export const api = {
   transcribe: async (audioUri: string): Promise<{ text: string }> => {
     if (USE_MOCK) return later(mockTranscribe());
     const form = new FormData();
-    // React Native FormData accepts { uri, name, type } for files.
-    form.append('audio', { uri: audioUri, name: 'answer.m4a', type: 'audio/m4a' } as unknown as Blob);
+    // Expo SDK 58 replaces global fetch with expo/fetch, which does NOT support the old
+    // React Native { uri, name, type } file parts. An expo-file-system File works.
+    form.append('audio', new File(audioUri) as unknown as Blob);
     return request('/transcribe', { method: 'POST', body: form });
   },
+
+  interpretDay: (text: string): Promise<DayInterpretation> =>
+    request('/review/interpret-day', send('POST', { text })),
 
   interpret: (goalId: string, text: string): Promise<Interpretation> =>
     USE_MOCK ? later(mockInterpret(text), 600) : request('/review/interpret', send('POST', { goalId, text })),

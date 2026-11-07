@@ -3,15 +3,25 @@ import {
   requestRecordingPermissionsAsync,
   setAudioModeAsync,
   useAudioRecorder,
+  type RecordingOptions,
 } from 'expo-audio';
 import { useCallback, useRef } from 'react';
 
 export class MicPermissionError extends Error {}
 
+// Speech, not music: mono 16 kHz at 32 kbps is ~4x smaller than HIGH_QUALITY
+// (stereo 44.1 kHz, 128 kbps), so uploads are much faster. Plenty for transcription.
+const SPEECH_PRESET: RecordingOptions = {
+  ...RecordingPresets.HIGH_QUALITY,
+  sampleRate: 16000,
+  numberOfChannels: 1,
+  bitRate: 32000,
+};
+
 // Hold-to-talk recording. start() on press-in, stop() on release returns the file uri.
 // The file is only sent to /transcribe; the backend deletes it right away.
 export function useVoiceRecorder() {
-  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recorder = useAudioRecorder(SPEECH_PRESET);
   const starting = useRef<Promise<void> | null>(null);
 
   const start = useCallback(() => {

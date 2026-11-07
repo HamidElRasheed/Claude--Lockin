@@ -49,6 +49,18 @@ export type Today = {
   reviewDone: boolean;
 };
 
+export type DayGoal = {
+  goalId: string;
+  goalTitle: string;
+  status: GoalStatus | null; // null = not mentioned, ask the user
+  reason: string | null;
+};
+
+export type DayInterpretation = {
+  goals: DayGoal[];
+  missing: string[];
+};
+
 export type Interpretation = {
   status: GoalStatus;
   reason: string | null;
