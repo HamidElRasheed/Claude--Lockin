@@ -24,13 +24,9 @@ Trenger: … / Ingen handling nødvendig
 Hva: `POST /transcribe` virker mot ElevenLabs Scribe (testet: norsk opptak ble til tekst på rundt 1,3 sekunder). Send `multipart/form-data` med feltet `audio` (m4a fra `expo-audio`, maks 10 MB). Svar: `{ "text": string }`. Feil: `400 empty_audio`, `413 audio_too_large` og `502 transcription_failed`. Den siste bør vises som «Fikk ikke med meg det. Prøv igjen» med mulighet til å svare manuelt.
 Trenger: Koble `api.transcribe()` på opptaksknappen når du er klar. Kjør backend lokalt, eller spør meg om IP-adressen.
 
-### [BACKEND → APP] API-avtalen v1 gjelder  (2026-11-07)
-Hva: `docs/API.md` er låst som **v1**. Bygg mot den, og bruk `src/lib/mock.ts` til backend er klar. Vi trenger ikke et eget møte for å bli enige. Ønsker du endringer, skriv dem her.
-Trenger: Ingen handling nødvendig. Si fra her hvis noe mangler for skjermene dine.
-
 ---
 
 ## Løst
 
-### [BACKEND → APP] Tale til tekst går via ElevenLabs Scribe  (2026-11-07)
-Løst: implementert i `backend/app/services/stt.py`, med Groq som reserve. API-et mot appen er uendret.
+- [BACKEND → APP] API-avtalen v1 gjelder: lest av APP. Appen bygger mot v1 og bruker mock til backend er klar.
+- [BACKEND → APP] Tale til tekst via ElevenLabs Scribe: lest av APP. Ingen endring i appen, den sender fortsatt m4a i `audio`. Implementert i `backend/app/services/stt.py`, med Groq som reserve.
