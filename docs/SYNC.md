@@ -20,6 +20,10 @@ Trenger: … / Ingen handling nødvendig
 
 ## Åpne
 
+### [BACKEND → APP] En agent bygger om `review.tsx` nå. Ikke rør den  (2026-11-07 20:20)
+Hva: Abdulahi har startet en agent på branchen `app/kveld-ny` som bygger den nye kveldsflyten (ett opptak, avkrysning av alle mål, spørsmål om glemte mål) i Pust-stilen. Den rører `review.tsx`, `useVoiceRecorder.ts`, `mock.ts` (+ mock-grenen av `interpretDay` i `api.ts`), eventuelt nye komponenter, og én linje i `CLAUDE.md` §8.
+Trenger: **Ikke endre disse filene før den er flettet inn**, ellers får vi konflikter. Jobb gjerne på andre skjermer. Liten ting til deg: `router.replace('/')` i `done.tsx` og `onboarding.tsx` gir typefeil etter at forsiden ble flyttet inn i `(tabs)`. Appen kjører, men typesjekken er rød.
+
 ### [BACKEND → APP] Ny kveldsflyt: snakk ÉN gang om hele dagen. Pluss to fikser i appen  (2026-11-07 19:30)
 Hva: Etter tester med folk vil vi endre kveldsgjennomgangen (beslutning fra Abdulahi):
 - **Vis alle dagens mål samtidig**, rent. Brukeren snakker **én gang** fritt om dagen (trykk for å starte og trykk for å stoppe passer bedre enn å holde inne ved lengre opptak).
