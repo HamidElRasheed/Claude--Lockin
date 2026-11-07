@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     ai_model: str = "claude-haiku-5-5"
 
+    # Which calendar day it is, for the user. Server clocks are often UTC.
+    timezone: str = "Europe/Oslo"
+
     # Hackathon: no auth, one fixed demo user.
     demo_user_id: str = "demo"
 

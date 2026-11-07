@@ -7,4 +7,5 @@ pydantic-settings==2.16.2
 pytest==9.2.0
 python-multipart==0.0.33
 SQLAlchemy==2.1.8
+tzdata==2026.6
 uvicorn==0.54.0

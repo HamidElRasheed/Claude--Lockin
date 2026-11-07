@@ -63,6 +63,26 @@ class Interpretation(BaseModel):
     reason: str | None
 
 
+Weekday = Literal["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+
+
+class ParsedGoal(BaseModel):
+    title: str
+    days: list[Weekday]
+    time: str | None
+    weeklyTarget: int | None  # noqa: N815 (camelCase matches the prompt)
+
+
+class ParsedGoals(BaseModel):
+    goals: list[ParsedGoal]
+
+
+def parse_goals(text: str) -> list[ParsedGoal]:
+    """Free text -> suggested goals. The router validates each one before returning it."""
+    result = _parse("parse_goals", f"Brukerens tekst: {text}", ParsedGoals)
+    return result.goals
+
+
 def interpret(goal_title: str, text: str) -> Interpretation:
     """Turn what the user said about one goal into done/partial/missed + a short reason."""
     return _parse(
