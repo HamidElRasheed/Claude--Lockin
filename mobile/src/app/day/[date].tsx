@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { Button } from '@/components/Button';
+import { IconButton } from '@/components/IconButton';
 import { Screen } from '@/components/Screen';
 import { StatusMark } from '@/components/StatusMark';
 import { Voice } from '@/components/Voice';
@@ -33,8 +33,8 @@ export default function LogDayScreen() {
   return (
     <Screen tone="dawn">
       <View style={styles.header}>
+        <IconButton icon="chevron.left" label="Tilbake" onPress={() => router.back()} />
         <Text style={styles.caption}>{date ? formatDay(date) : ''}</Text>
-        <Button tone="dawn" variant="quiet" label="Tilbake" onPress={() => router.back()} />
       </View>
 
       {state.kind === 'loading' && <Voice tone="dawn" muted>Et øyeblikk.</Voice>}
@@ -72,7 +72,7 @@ export default function LogDayScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.lg },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginBottom: space.lg },
   content: { gap: space.xl, paddingBottom: space.xl },
   entries: { gap: space.md },
   entry: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },

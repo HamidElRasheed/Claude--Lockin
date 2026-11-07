@@ -1,6 +1,5 @@
-import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Orb } from '@/components/Orb';
@@ -9,7 +8,7 @@ import { Voice } from '@/components/Voice';
 import { ApiError, api } from '@/lib/api';
 import type { WeeklyReport } from '@/lib/types';
 import { isoWeek } from '@/lib/words';
-import { palettes, space, type } from '@/theme';
+import { palettes, radius, space, type } from '@/theme';
 
 const palette = palettes.dawn;
 
@@ -24,9 +23,7 @@ function lastWeek(): string {
 
 // The weekly report reads like a short letter: what happened, why, and one concrete offer.
 export default function WeekScreen() {
-  const router = useRouter();
   const [state, setState] = useState<State>({ kind: 'loading' });
-  const [answered, setAnswered] = useState<'yes' | 'no' | null>(null);
 
   const fetchData = useCallback(() => {
     api
@@ -49,11 +46,10 @@ export default function WeekScreen() {
   const weekNumber = state.kind === 'ready' ? Number(state.report.week.split('W')[1]) : null;
 
   return (
-    <Screen tone="dawn">
+    <Screen tone="dawn" inTabs>
       <View style={styles.header}>
         <Orb tone="dawn" size={14} />
         <Text style={styles.caption}>{weekNumber ? `Uke ${weekNumber}` : 'Uken din'}</Text>
-        <Button tone="dawn" variant="quiet" label="Lukk" onPress={() => router.back()} />
       </View>
 
       {state.kind === 'loading' && <Voice tone="dawn" muted>Skriver brevet ditt. Det tar noen sekunder.</Voice>}
@@ -71,23 +67,30 @@ export default function WeekScreen() {
         </>
       )}
 
-      {state.kind === 'ready' && (
-        <Letter report={state.report} answered={answered} onAnswer={setAnswered} />
-      )}
+      {state.kind === 'ready' && <Letter report={state.report} />}
     </Screen>
   );
 }
 
-function Letter({
-  report,
-  answered,
-  onAnswer,
-}: {
-  report: WeeklyReport;
-  answered: 'yes' | 'no' | null;
-  onAnswer: (a: 'yes' | 'no') => void;
-}) {
+type Answer = { kind: 'open' } | { kind: 'saving' } | { kind: 'yes'; calendarUrl: string | null } | { kind: 'no' } | { kind: 'error' };
+
+function Letter({ report }: { report: WeeklyReport }) {
   const [suggestion] = report.suggestions;
+  const [answer, setAnswer] = useState<Answer>({ kind: 'open' });
+
+  async function accept() {
+    if (!suggestion?.goalId || !suggestion.change) {
+      setAnswer({ kind: 'yes', calendarUrl: null });
+      return;
+    }
+    setAnswer({ kind: 'saving' });
+    try {
+      const result = await api.applySuggestion(suggestion.goalId, suggestion.change);
+      setAnswer({ kind: 'yes', calendarUrl: result.calendarUrl });
+    } catch {
+      setAnswer({ kind: 'error' });
+    }
+  }
   const empty = report.patterns.length === 0 && report.wentWell.length === 0;
 
   if (empty) {
@@ -110,16 +113,37 @@ function Letter({
       </ScrollView>
 
       {suggestion && (
-        <View style={styles.footer}>
-          {answered === null ? (
-            <>
-              <Text style={styles.body}>{suggestion.text}</Text>
-              <Button tone="dawn" label="Ja, gjør det" onPress={() => onAnswer('yes')} />
-              <Button tone="dawn" variant="quiet" label="Ikke nå" onPress={() => onAnswer('no')} />
-            </>
-          ) : (
-            <Text style={styles.body}>{answered === 'yes' ? 'Avtalt. Vi prøver det neste uke.' : 'Greit. Vi lar det være som det er.'}</Text>
+        <View style={styles.card}>
+          <Text style={styles.cardLabel}>Forslag til neste uke</Text>
+          <Text style={styles.cardText}>{suggestion.text}</Text>
+
+          {(answer.kind === 'open' || answer.kind === 'saving' || answer.kind === 'error') && (
+            <View style={styles.actions}>
+              {answer.kind === 'error' && <Text style={styles.body}>Fikk ikke flyttet målet. Prøv igjen.</Text>}
+              <Button tone="dawn" label="Ja, gjør det" loading={answer.kind === 'saving'} onPress={accept} />
+              <View style={styles.center}>
+                <Button tone="dawn" variant="text" label="Ikke nå" onPress={() => setAnswer({ kind: 'no' })} />
+              </View>
+            </View>
           )}
+
+          {answer.kind === 'yes' && (
+            <View style={styles.actions}>
+              <Text style={styles.body}>Avtalt. Målet er flyttet.</Text>
+              {answer.calendarUrl && (
+                <Button
+                  tone="dawn"
+                  variant="tonal"
+                  label="Legg i kalenderen"
+                  icon="calendar.badge.plus"
+                  onPress={() => Linking.openURL(answer.calendarUrl ?? '')}
+                  fill
+                />
+              )}
+            </View>
+          )}
+
+          {answer.kind === 'no' && <Text style={styles.body}>Greit. Vi lar det være som det er.</Text>}
         </View>
       )}
     </>
@@ -132,5 +156,10 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   letter: { gap: space.lg, paddingBottom: space.lg },
   footer: { gap: space.sm, paddingTop: space.md },
-  body: { ...type.body, color: palette.text, marginBottom: space.sm },
+  body: { ...type.body, color: palette.text },
+  card: { backgroundColor: palette.surface, borderRadius: radius.lg, padding: space.lg, gap: space.sm, marginTop: space.md },
+  cardLabel: { ...type.caption, color: palette.textMuted },
+  cardText: { ...type.body, color: palette.text, fontWeight: '600' },
+  actions: { gap: space.xs, marginTop: space.sm },
+  center: { alignItems: 'center' },
 });

@@ -1,55 +1,100 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import type { SFSymbol } from 'expo-symbols';
+import { useState } from 'react';
+import { ActivityIndicator, Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { palettes, radius, space, type Tone, type } from '@/theme';
+import { Icon } from '@/components/Icon';
+import { control, palettes, radius, space, type Tone, type } from '@/theme';
+
+type Variant = 'primary' | 'tonal' | 'text';
 
 type Props = {
   label: string;
   onPress: () => void;
   tone?: Tone;
-  variant?: 'primary' | 'quiet' | 'outline';
+  variant?: Variant;
+  icon?: SFSymbol;
+  loading?: boolean;
   disabled?: boolean;
+  fill?: boolean;
 };
 
-// One primary per screen; everything else is quiet or outline.
-export function Button({ label, onPress, tone = 'dawn', variant = 'primary', disabled = false }: Props) {
+// Three levels, one look:
+// primary = the one thing to do here (warm, full width, arrow), tonal = a real secondary choice,
+// text = a quiet way out. All give a soft press-in and a light tap of haptics.
+export function Button({
+  label,
+  onPress,
+  tone = 'dawn',
+  variant = 'primary',
+  icon,
+  loading = false,
+  disabled = false,
+  fill = variant === 'primary',
+}: Props) {
   const palette = palettes[tone];
-  const isPrimary = variant === 'primary';
+  const [scale] = useState(() => new Animated.Value(1));
+  const inactive = disabled || loading;
+
+  const animateTo = (value: number) =>
+    Animated.timing(scale, { toValue: value, duration: 120, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
+
+  const colors = {
+    primary: { bg: palette.action, fg: palette.actionText },
+    tonal: { bg: palette.tonal, fg: palette.tonalText },
+    text: { bg: 'transparent', fg: palette.text },
+  }[variant];
+
+  const trailing = icon ?? (variant === 'primary' ? 'arrow.right' : undefined);
+
   return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      disabled={disabled}
-      style={({ pressed }) => [
-        styles.base,
-        isPrimary && { backgroundColor: palette.action },
-        variant === 'quiet' && styles.quiet,
-        variant === 'outline' && { borderWidth: 1, borderColor: palette.line },
-        (pressed || disabled) && styles.dimmed,
-      ]}
-    >
-      <Text
-        style={[
-          styles.label,
-          { color: isPrimary ? palette.actionText : variant === 'outline' ? palette.text : palette.textMuted },
-          isPrimary && styles.strong,
+    <Animated.View style={[fill && styles.fill, { transform: [{ scale }] }]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ disabled: inactive, busy: loading }}
+        onPress={onPress}
+        onPressIn={() => {
+          animateTo(0.97);
+          Haptics.selectionAsync();
+        }}
+        onPressOut={() => animateTo(1)}
+        disabled={inactive}
+        style={({ pressed }) => [
+          styles.base,
+          variant === 'primary' && styles.primary,
+          variant === 'text' && styles.text,
+          { backgroundColor: colors.bg },
+          pressed && variant !== 'text' && styles.pressed,
+          inactive && styles.inactive,
         ]}
       >
-        {label}
-      </Text>
-    </Pressable>
+        {loading ? (
+          <ActivityIndicator color={colors.fg} />
+        ) : (
+          <View style={styles.row}>
+            <Text style={[styles.label, variant === 'primary' && styles.strong, { color: colors.fg }]}>{label}</Text>
+            {trailing && <Icon name={trailing} color={colors.fg} size={variant === 'primary' ? 17 : 15} />}
+          </View>
+        )}
+      </Pressable>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
+  fill: { alignSelf: 'stretch' },
   base: {
-    minHeight: 52,
+    minHeight: control.height,
     paddingHorizontal: space.lg,
-    borderRadius: radius.pill,
+    borderRadius: radius.button,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  quiet: { paddingHorizontal: 0 },
-  label: { ...type.body },
+  primary: { minHeight: control.primaryHeight },
+  text: { paddingHorizontal: space.sm, minHeight: control.iconButton },
+  row: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  label: { ...type.body, fontWeight: '500' },
   strong: { fontWeight: '600' },
-  dimmed: { opacity: 0.6 },
+  pressed: { opacity: 0.88 },
+  inactive: { opacity: 0.45 },
 });

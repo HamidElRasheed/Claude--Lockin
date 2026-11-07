@@ -11,8 +11,14 @@ export default function RootLayout() {
         contentStyle: { backgroundColor: palettes.dawn.background },
       }}
     >
-      <Stack.Screen name="review" options={{ contentStyle: { backgroundColor: palettes.dusk.background } }} />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen
+        name="review"
+        options={{ animation: 'slide_from_bottom', contentStyle: { backgroundColor: palettes.dusk.background } }}
+      />
       <Stack.Screen name="done" options={{ contentStyle: { backgroundColor: palettes.dusk.background } }} />
+      <Stack.Screen name="day/[date]" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="onboarding" options={{ animation: 'slide_from_bottom' }} />
     </Stack>
   );
 }

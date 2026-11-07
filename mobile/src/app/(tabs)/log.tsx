@@ -1,8 +1,9 @@
-import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
+import { Icon } from '@/components/Icon';
 import { Screen } from '@/components/Screen';
 import { StatusMark } from '@/components/StatusMark';
 import { Voice } from '@/components/Voice';
@@ -27,9 +28,8 @@ export default function LogListScreen() {
       .catch(() => setState({ kind: 'error' }));
   }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  // A finished evening shows up as soon as you come back to this tab.
+  useFocusEffect(fetchData);
 
   const retry = () => {
     setState({ kind: 'loading' });
@@ -37,10 +37,9 @@ export default function LogListScreen() {
   };
 
   return (
-    <Screen tone="dawn">
+    <Screen tone="dawn" inTabs>
       <View style={styles.header}>
         <Voice tone="dawn">Dagene dine.</Voice>
-        <Button tone="dawn" variant="quiet" label="Lukk" onPress={() => router.back()} />
       </View>
 
       {state.kind === 'loading' && <Voice tone="dawn" muted>Et øyeblikk.</Voice>}
@@ -65,7 +64,7 @@ export default function LogListScreen() {
           renderItem={({ item }) => (
             <Pressable
               accessibilityRole="button"
-              onPress={() => router.push({ pathname: '/log/[date]', params: { date: item.date } })}
+              onPress={() => router.push({ pathname: '/day/[date]', params: { date: item.date } })}
               style={({ pressed }) => [styles.row, pressed && styles.pressed]}
             >
               <View style={styles.rowTop}>
@@ -74,6 +73,7 @@ export default function LogListScreen() {
                   {item.entries.map((e) => (
                     <StatusMark key={e.goalId} status={e.status} tone="dawn" />
                   ))}
+                  <Icon name="chevron.right" color={palette.textMuted} size={13} />
                 </View>
               </View>
               <Text style={styles.summary} numberOfLines={2}>
@@ -95,6 +95,6 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.6 },
   rowTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   day: { ...type.body, color: palette.text, fontWeight: '600' },
-  marks: { flexDirection: 'row', gap: space.xs },
+  marks: { flexDirection: 'row', gap: space.xs, alignItems: 'center' },
   summary: { ...type.body, color: palette.textMuted },
 });

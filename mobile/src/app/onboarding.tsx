@@ -1,8 +1,9 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/Button';
+import { IconButton } from '@/components/IconButton';
 import { Screen } from '@/components/Screen';
 import { Voice } from '@/components/Voice';
 import { ApiError, api } from '@/lib/api';
@@ -40,12 +41,17 @@ export default function OnboardingScreen() {
     }
   }
 
+  function close() {
+    if (router.canGoBack()) router.back();
+    else router.replace('/');
+  }
+
   async function save() {
     setStage('saving');
     setMessage(null);
     try {
       for (const draft of drafts) await api.createGoal(draft);
-      router.replace('/');
+      close();
     } catch {
       setMessage('Fikk ikke lagret alle målene. Prøv igjen.');
       setStage('confirm');
@@ -54,6 +60,9 @@ export default function OnboardingScreen() {
 
   return (
     <Screen tone="dawn">
+      <View style={styles.top}>
+        <IconButton icon="xmark" label="Lukk" onPress={close} />
+      </View>
       <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {(stage === 'write' || stage === 'parsing') && (
           <>
@@ -73,9 +82,10 @@ export default function OnboardingScreen() {
             <View style={styles.footer}>
               <Button
                 tone="dawn"
-                label={stage === 'parsing' ? 'Et øyeblikk …' : 'Lag målkort'}
+                label="Lag målkort"
+                loading={stage === 'parsing'}
                 onPress={parse}
-                disabled={stage === 'parsing' || text.trim().length < 3}
+                disabled={text.trim().length < 3}
               />
             </View>
           </>
@@ -94,14 +104,11 @@ export default function OnboardingScreen() {
                       {draft.time ? ` · kl. ${draft.time}` : ''}
                     </Text>
                   </View>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={`Fjern ${draft.title}`}
-                    hitSlop={12}
+                  <IconButton
+                    icon="xmark"
+                    label={`Fjern ${draft.title}`}
                     onPress={() => setDrafts((prev) => prev.filter((_, j) => j !== i))}
-                  >
-                    <Text style={styles.caption}>Fjern</Text>
-                  </Pressable>
+                  />
                 </View>
               ))}
             </ScrollView>
@@ -109,11 +116,14 @@ export default function OnboardingScreen() {
             <View style={styles.footer}>
               <Button
                 tone="dawn"
-                label={stage === 'saving' ? 'Lagrer …' : 'Lagre målene'}
+                label={drafts.length === 1 ? 'Lagre målet' : `Lagre ${drafts.length} mål`}
+                loading={stage === 'saving'}
                 onPress={save}
-                disabled={stage === 'saving' || drafts.length === 0}
+                disabled={drafts.length === 0}
               />
-              <Button tone="dawn" variant="quiet" label="Skriv på nytt" onPress={() => setStage('write')} />
+              <View style={styles.center}>
+                <Button tone="dawn" variant="text" label="Skriv på nytt" icon="square.and.pencil" onPress={() => setStage('write')} />
+              </View>
             </View>
           </>
         )}
@@ -124,6 +134,8 @@ export default function OnboardingScreen() {
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
+  center: { alignItems: 'center' },
+  top: { alignItems: 'flex-end', marginTop: -space.xl, marginBottom: space.md },
   caption: { ...type.caption, color: palette.textMuted, marginTop: space.sm },
   input: {
     ...type.body,

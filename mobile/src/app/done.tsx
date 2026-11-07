@@ -52,7 +52,7 @@ export default function DoneScreen() {
       )}
 
       <View style={styles.footer}>
-        <Button tone="dusk" variant="quiet" label="Tilbake til start" onPress={() => router.replace('/')} />
+        <Button tone="dusk" variant="tonal" label="Til forsiden" onPress={() => router.replace('/')} />
       </View>
     </Screen>
   );

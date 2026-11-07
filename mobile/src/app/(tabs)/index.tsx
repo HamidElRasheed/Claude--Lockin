@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
@@ -27,9 +27,8 @@ export default function MorningScreen() {
       .catch(() => setState({ kind: 'error' }));
   }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  // Refresh whenever the tab comes back into view (after the review or setup).
+  useFocusEffect(fetchData);
 
   const retry = () => {
     setState({ kind: 'loading' });
@@ -37,7 +36,7 @@ export default function MorningScreen() {
   };
 
   return (
-    <Screen tone="dawn">
+    <Screen tone="dawn" inTabs>
       <View style={styles.orb}>
         <Orb tone="dawn" size={150} />
       </View>
@@ -55,24 +54,12 @@ export default function MorningScreen() {
         </>
       )}
 
-      {state.kind === 'ready' && <Ready today={state.today} onReview={() => router.push('/review')} onWeek={() => router.push('/week')} onLog={() => router.push('/log')} onSetup={() => router.push('/onboarding')} />}
+      {state.kind === 'ready' && <Ready today={state.today} onReview={() => router.push('/review')} onSetup={() => router.push('/onboarding')} />}
     </Screen>
   );
 }
 
-function Ready({
-  today,
-  onReview,
-  onWeek,
-  onLog,
-  onSetup,
-}: {
-  today: Today;
-  onReview: () => void;
-  onWeek: () => void;
-  onLog: () => void;
-  onSetup: () => void;
-}) {
+function Ready({ today, onReview, onSetup }: { today: Today; onReview: () => void; onSetup: () => void }) {
   const [first] = today.goals;
 
   if (!first) {
@@ -82,7 +69,7 @@ function Ready({
           <Voice tone="dawn" muted>Ingen mål i dag. Nyt den.</Voice>
         </View>
         <View style={styles.footer}>
-          <Button tone="dawn" variant="outline" label="Sett opp mål" onPress={onSetup} />
+          <Button tone="dawn" label="Sett opp mål" onPress={onSetup} />
         </View>
       </>
     );
@@ -106,12 +93,11 @@ function Ready({
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.caption}>{today.reviewDone ? 'Kvelden er gjort.' : 'Vi snakkes i kveld.'}</Text>
-        <View style={styles.links}>
-          {!today.reviewDone && <Button tone="dawn" variant="outline" label="Start kvelden" onPress={onReview} />}
-          <Button tone="dawn" variant="quiet" label="Uken din" onPress={onWeek} />
-          <Button tone="dawn" variant="quiet" label="Dagene" onPress={onLog} />
-        </View>
+        {today.reviewDone ? (
+          <Text style={styles.caption}>Kvelden er gjort. Sov godt i natt.</Text>
+        ) : (
+          <Button tone="dawn" label="Start kvelden" icon="moon.stars" onPress={onReview} />
+        )}
       </View>
     </>
   );
@@ -126,7 +112,6 @@ const styles = StyleSheet.create({
   timeFirst: { color: palette.text, fontWeight: '600' },
   goal: { ...type.body, color: palette.text },
   goalLater: { color: palette.textMuted },
-  footer: { marginTop: space.xxl, gap: space.md },
+  footer: { marginTop: space.xxl, gap: space.sm },
   caption: { ...type.caption, color: palette.textMuted },
-  links: { flexDirection: 'row', flexWrap: 'wrap', columnGap: space.md, alignItems: 'center' },
 });
