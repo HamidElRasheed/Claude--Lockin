@@ -36,6 +36,6 @@ def health() -> dict[str, bool]:
     return {"ok": True}
 
 
-# Routers are added here as they are built, e.g.:
-# from app.routers import goals
-# app.include_router(goals.router)
+from app.routers import transcribe  # noqa: E402
+
+app.include_router(transcribe.router)

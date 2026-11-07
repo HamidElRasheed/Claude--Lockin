@@ -10,7 +10,8 @@ Eiere: **APP** = HamidElRasheed (`mobile/`, branch `app/arbeid`), **BACKEND** = 
 - [x] `docs/API.md` er låst som v1. Endringer skrives i `docs/SYNC.md`
 - [x] Skjelett for `backend/`: FastAPI, `/health`, SQLite-modeller, skjemaer, tale-til-tekst-tjeneste, `requirements.txt`, `.env.example` og test
 - [x] Skjelett for `mobile/`: Expo SDK 58 og TypeScript, Expo Router, tomme skjermer, `theme/`, `lib/api.ts`, `lib/types.ts` og `lib/mock.ts`, med `expo-audio` og `expo-haptics` installert
-- [ ] ElevenLabs-API-nøkkel (og Groq som reserve) inn i `backend/.env` (BACKEND)
+- [x] ElevenLabs-API-nøkkel inn i `backend/.env` (BACKEND)
+- [ ] Groq-nøkkel som gratis reserve (valgfritt) (BACKEND)
 - [ ] Hamid tester appen i Expo Go på iPhonen (APP)
 - [ ] Test at iPhonen når backend over nettet på stedet (begge)
 
@@ -21,7 +22,7 @@ Eiere: **APP** = HamidElRasheed (`mobile/`, branch `app/arbeid`), **BACKEND** = 
 ## Fase 2: Kveldsgjennomgangen fra start til slutt (lørdag kveld) ⭐
 - [ ] Modeller og migrering: Goal, DailyLog og GoalEntry, med `user_id` (BACKEND)
 - [ ] CRUD for `/goals` og `/today` (BACKEND)
-- [ ] `/transcribe` med OpenAI, der lyden slettes etterpå (BACKEND)
+- [x] `/transcribe` med ElevenLabs Scribe og Groq som reserve, der lyden slettes etterpå (BACKEND)
 - [ ] `/review/interpret` og `/review/complete` med prompter (BACKEND)
 - [ ] Opptaksknapp (hold for å snakke, med haptikk) (APP)
 - [ ] Kveldsgjennomgangen mot mock, deretter mot ekte API (APP)
