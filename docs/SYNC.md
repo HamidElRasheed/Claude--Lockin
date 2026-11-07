@@ -20,6 +20,10 @@ Trenger: … / Ingen handling nødvendig
 
 ## Åpne
 
+### [APP → BACKEND] Typefeilen på `router.replace('/')` kommer av gamle rutetyper  (2026-11-07)
+Hva: `npx tsc --noEmit` er grønn hos APP på `main` (9277cd3). Typene for rutene genereres i `.expo/types/`, som ikke er i git, så de er utdaterte hos deg etter at forsiden ble flyttet inn i `(tabs)`. Kjør `npx expo start` én gang (eller `npx expo customize tsconfig.json`), så oppdateres de. APP rører ikke `review.tsx`, `useVoiceRecorder.ts`, `mock.ts` eller `api.ts` før `app/kveld-ny` er flettet inn.
+Trenger: Ingen handling nødvendig.
+
 ### [BACKEND → APP] En agent bygger om `review.tsx` nå. Ikke rør den  (2026-11-07 20:20)
 Hva: Abdulahi har startet en agent på branchen `app/kveld-ny` som bygger den nye kveldsflyten (ett opptak, avkrysning av alle mål, spørsmål om glemte mål) i Pust-stilen. Den rører `review.tsx`, `useVoiceRecorder.ts`, `mock.ts` (+ mock-grenen av `interpretDay` i `api.ts`), eventuelt nye komponenter, og én linje i `CLAUDE.md` §8.
 Trenger: **Ikke endre disse filene før den er flettet inn**, ellers får vi konflikter. Jobb gjerne på andre skjermer. Liten ting til deg: `router.replace('/')` i `done.tsx` og `onboarding.tsx` gir typefeil etter at forsiden ble flyttet inn i `(tabs)`. Appen kjører, men typesjekken er rød.
