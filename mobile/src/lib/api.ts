@@ -2,9 +2,11 @@
 
 import {
   mockCompleteReview,
+  mockCreateGoal,
   mockGoals,
   mockInterpret,
   mockLogs,
+  mockParseGoals,
   mockToday,
   mockTranscribe,
   mockWeeklyReport,
@@ -34,7 +36,12 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, init);
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, init);
+  } catch {
+    throw new ApiError('network', 'Får ikke kontakt med serveren.', 0);
+  }
   if (!res.ok) {
     const body = await res.json().catch(() => null);
     throw new ApiError(
@@ -52,9 +59,9 @@ function later<T>(value: T, ms = 900): Promise<T> {
   return new Promise((resolve) => setTimeout(() => resolve(value), ms));
 }
 
-function json(body: unknown): RequestInit {
+function send(method: 'POST' | 'PATCH', body: unknown): RequestInit {
   return {
-    method: 'POST',
+    method,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   };
@@ -63,15 +70,18 @@ function json(body: unknown): RequestInit {
 export const api = {
   health: () => request<{ ok: boolean }>('/health'),
 
-  getGoals: (): Promise<Goal[]> =>
-    USE_MOCK ? Promise.resolve(mockGoals) : request('/goals'),
+  getGoals: (): Promise<Goal[]> => (USE_MOCK ? Promise.resolve(mockGoals) : request('/goals')),
 
-  createGoal: (draft: GoalDraft): Promise<Goal> => request('/goals', json(draft)),
+  createGoal: (draft: GoalDraft): Promise<Goal> =>
+    USE_MOCK ? later(mockCreateGoal(draft), 200) : request('/goals', send('POST', draft)),
 
-  parseGoals: (text: string): Promise<GoalDraft[]> => request('/goals/parse', json({ text })),
+  updateGoal: (id: string, changes: Partial<GoalDraft> & { active?: boolean }): Promise<Goal> =>
+    request(`/goals/${id}`, send('PATCH', changes)),
 
-  getToday: (): Promise<Today> =>
-    USE_MOCK ? Promise.resolve(mockToday) : request('/today'),
+  parseGoals: (text: string): Promise<GoalDraft[]> =>
+    USE_MOCK ? later(mockParseGoals(text), 1200) : request('/goals/parse', send('POST', { text })),
+
+  getToday: (): Promise<Today> => (USE_MOCK ? Promise.resolve(mockToday) : request('/today')),
 
   transcribe: async (audioUri: string): Promise<{ text: string }> => {
     if (USE_MOCK) return later(mockTranscribe());
@@ -82,13 +92,15 @@ export const api = {
   },
 
   interpret: (goalId: string, text: string): Promise<Interpretation> =>
-    USE_MOCK ? later(mockInterpret(text), 600) : request('/review/interpret', json({ goalId, text })),
+    USE_MOCK ? later(mockInterpret(text), 600) : request('/review/interpret', send('POST', { goalId, text })),
 
   completeReview: (date: string, entries: GoalEntry[], reflection: string | null): Promise<DailyLog> =>
-    USE_MOCK ? later(mockCompleteReview(date, entries, reflection)) : request('/review/complete', json({ date, entries, reflection })),
+    USE_MOCK
+      ? later(mockCompleteReview(date, entries, reflection))
+      : request('/review/complete', send('POST', { date, entries, reflection })),
 
-  getLogs: (from: string, to: string): Promise<DailyLog[]> =>
-    USE_MOCK ? Promise.resolve(mockLogs) : request(`/logs?from=${from}&to=${to}`),
+  // Defaults to the last 30 days, newest first.
+  getLogs: (): Promise<DailyLog[]> => (USE_MOCK ? Promise.resolve(mockLogs) : request('/logs')),
 
   getLog: (date: string): Promise<DailyLog> => {
     if (!USE_MOCK) return request(`/logs/${date}`);
@@ -96,9 +108,16 @@ export const api = {
     return log ? Promise.resolve(log) : Promise.reject(new ApiError('log_not_found', 'Fant ingen logg for dagen.', 404));
   },
 
-  getWeeklyReport: (week: string): Promise<WeeklyReport> =>
-    USE_MOCK ? Promise.resolve(mockWeeklyReport) : request(`/reports/weekly?week=${week}`),
-
-  generateWeeklyReport: (week: string): Promise<WeeklyReport> =>
-    request('/reports/weekly/generate', json({ week })),
+  // Fetch the stored report; if none exists yet, ask the backend to write it (3–7 s).
+  getWeeklyReport: async (week: string): Promise<WeeklyReport> => {
+    if (USE_MOCK) return later(mockWeeklyReport, 600);
+    try {
+      return await request<WeeklyReport>(`/reports/weekly?week=${week}`);
+    } catch (error) {
+      if (error instanceof ApiError && error.code === 'report_not_found') {
+        return request('/reports/weekly/generate', send('POST', { week }));
+      }
+      throw error;
+    }
+  },
 };

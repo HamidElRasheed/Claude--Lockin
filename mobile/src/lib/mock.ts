@@ -1,7 +1,7 @@
 // Mock data with exactly the same shape as the API (docs/API.md).
 // Used while EXPO_PUBLIC_USE_MOCK is not "false".
 
-import type { DailyLog, Goal, GoalEntry, Interpretation, Today, WeeklyReport } from './types';
+import type { DailyLog, Goal, GoalDraft, GoalEntry, Interpretation, Today, WeeklyReport } from './types';
 
 export const mockGoals: Goal[] = [
   { id: 'g1', title: 'Trene', days: ['mon', 'wed', 'fri'], time: '07:00', weeklyTarget: 3, active: true },
@@ -77,4 +77,18 @@ export function mockCompleteReview(date: string, entries: GoalEntry[], reflectio
   if (existing >= 0) mockLogs[existing] = log;
   else mockLogs.unshift(log);
   return log;
+}
+
+export function mockParseGoals(text: string): GoalDraft[] {
+  if (text.trim().length < 3) return [];
+  return [
+    { title: 'Trene', days: ['mon', 'wed', 'fri'], time: '07:00', weeklyTarget: 3 },
+    { title: 'Lese 20 min', days: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'], time: '21:30', weeklyTarget: null },
+  ];
+}
+
+export function mockCreateGoal(draft: GoalDraft): Goal {
+  const goal: Goal = { ...draft, id: `g${mockGoals.length + 1}`, active: true };
+  mockGoals.push(goal);
+  return goal;
 }

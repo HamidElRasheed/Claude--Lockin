@@ -6,14 +6,21 @@ import { Button } from '@/components/Button';
 import { Orb } from '@/components/Orb';
 import { Screen } from '@/components/Screen';
 import { Voice } from '@/components/Voice';
-import { api } from '@/lib/api';
+import { ApiError, api } from '@/lib/api';
 import type { WeeklyReport } from '@/lib/types';
 import { isoWeek } from '@/lib/words';
 import { palettes, space, type } from '@/theme';
 
 const palette = palettes.dawn;
 
-type State = { kind: 'loading' } | { kind: 'error' } | { kind: 'ready'; report: WeeklyReport };
+type State = { kind: 'loading' } | { kind: 'error' } | { kind: 'empty' } | { kind: 'ready'; report: WeeklyReport };
+
+// The letter covers last week, which is complete (backend suggestion in SYNC.md).
+function lastWeek(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - 7);
+  return isoWeek(d);
+}
 
 // The weekly report reads like a short letter: what happened, why, and one concrete offer.
 export default function WeekScreen() {
@@ -23,9 +30,11 @@ export default function WeekScreen() {
 
   const fetchData = useCallback(() => {
     api
-      .getWeeklyReport(isoWeek(new Date()))
+      .getWeeklyReport(lastWeek())
       .then((report) => setState({ kind: 'ready', report }))
-      .catch(() => setState({ kind: 'error' }));
+      .catch((error) =>
+        setState(error instanceof ApiError && error.code === 'no_logs_for_week' ? { kind: 'empty' } : { kind: 'error' }),
+      );
   }, []);
 
   useEffect(() => {
@@ -47,7 +56,11 @@ export default function WeekScreen() {
         <Button tone="dawn" variant="quiet" label="Lukk" onPress={() => router.back()} />
       </View>
 
-      {state.kind === 'loading' && <Voice tone="dawn" muted>Leser uken din.</Voice>}
+      {state.kind === 'loading' && <Voice tone="dawn" muted>Skriver brevet ditt. Det tar noen sekunder.</Voice>}
+
+      {state.kind === 'empty' && (
+        <Voice tone="dawn" muted>Forrige uke er tom. Snakk med meg noen kvelder, så ser vi mønstrene sammen.</Voice>
+      )}
 
       {state.kind === 'error' && (
         <>
