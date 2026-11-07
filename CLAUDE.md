@@ -169,9 +169,9 @@ npx expo install <pakke>        # bruk ALLTID denne i stedet for npm install <pa
 
 Designretningen heter **Pust** (se `DECISIONS.md`). Appen snakker til brukeren i rolige setninger, og brukeren snakker tilbake. Alle verdier ligger i `mobile/src/theme/`, og prototypen ligger på designlerretet i Claude.
 
-- **Appen «snakker» med serif.** Alt appen sier (spørsmål, svar, rapporter) skrives i **Newsreader** (`type.voice`) med komponenten `Voice`. Brukerens egne ord og resten av grensesnittet bruker **Familjen Grotesk** (`type.body`, `type.caption` og `type.strong`). Skriftene lastes i `src/app/_layout.tsx`. Vekt velges med `fonts.*`, aldri med `fontWeight`. Maks tre størrelser per skjerm.
+- **Én skrift: systemfonten (SF Pro på iPhone).** Ingen serif og ingen nedlastede fonter. Hierarkiet kommer bare fra størrelse og vekt: `type.title` (34, fet) for det appen sier, `type.lead` (20) for linjen under, `type.body` (17) og `type.caption` (13). Hver skjerm har en liten dato eller etikett øverst, en stor tittel, og innholdet rett under, slik Apples egne apper er bygd.
 - **To stemninger, ikke en mørk modus:** `dawn` (lys og varm: morgen, ukesbrev, oppsett) og `dusk` (dyp blå skumring: kveldsgjennomgang og ferdig-skjermen). Fargene kommer bare fra `palettes` i temaet.
-- **Lyskulen (`Orb`) er den eneste pynten.** Den er en flat sirkel med en tynn ring som puster, og den blir større mens brukeren snakker. **Ingen glød, ingen skygger og ingen gradienter.**
+- **Lyskulen (`Orb`) er den eneste pynten,** og den brukes bare i kvelden og i menyen. Den er en flat sirkel med en tynn ring som puster, og den blir større mens brukeren snakker. **Ingen glød, ingen skygger og ingen gradienter.**
 - **Rette hjørner.** Knapper og flater har nesten firkantede hjørner (`radius` = 2). Bare ekte sirkler, som kulen og statusmerkene, er runde. **Ingen avrundede kort:** innhold skilles med tynne linjer, og en seksjon får en mørk strek over seg i stedet for en boks.
 - **Trykk for å starte og stoppe; ett opptak for hele dagen** i kveldsgjennomgangen, med haptikk (`expo-haptics`) ved start og stopp. Appen krysser av målene den hørte og spør bare om dem som ikke ble nevnt. Det skal alltid gå an å svare med knapper.
 - **Ingen straff:** status vises med `StatusMark` (fylt, halv eller tom ring). Aldri rødt, aldri «du brøt rekka».
