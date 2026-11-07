@@ -65,7 +65,7 @@ Ikke heng deg opp i små detaljer, men lever aldri noe som ser halvferdig ut.
 |---|---|---|
 | App | **Expo (React Native) + TypeScript**, Expo Router | Må kjøre i **Expo Go** på iPhone. Ingen pakker som krever egne native moduler eller utviklerbygg |
 | Opptak | `expo-audio` | Fungerer i Expo Go |
-| Backend | **Python 3.12 + FastAPI** | Pydantic for validering. Automatisk OpenAPI på `/docs` |
+| Backend | **Python 3.13 + FastAPI** | Pydantic for validering. Automatisk OpenAPI på `/docs`. Ikke 3.15: mange pakker mangler ferdige versjoner for den |
 | Database | **SQLite** via **SQLAlchemy 2.0** | Bytte til PostgreSQL senere skal bare kreve endring av `DATABASE_URL` |
 | Tale til tekst | OpenAI-transkribering, bak et eget grensesnitt i `services/stt.py` | Norsk. Leverandøren skal kunne byttes, for eksempel til NB-Whisper |
 | AI (tolking og rapporter) | **Ikke valgt ennå.** Ligger bak `services/ai.py` | Se `DECISIONS.md` |
@@ -85,22 +85,25 @@ Ikke legg til nye avhengigheter uten god grunn. Skriv grunnen i commit-meldingen
 ├── KONTEKST.md          ← bakgrunn fra idéfasen
 ├── docs/
 │   └── API.md           ← API-AVTALEN mellom app og backend (kilden til sannhet)
-├── mobile/              ← Expo-appen
-│   ├── app/             ← Expo Router-skjermer
-│   │   ├── _layout.tsx
-│   │   ├── index.tsx           (morgen)
-│   │   ├── onboarding.tsx      (oppsett)
-│   │   ├── review.tsx          (kveldsgjennomgang)
-│   │   ├── log/index.tsx       (logg-liste)
-│   │   ├── log/[date].tsx      (én dag)
-│   │   └── week.tsx            (ukesrapport)
-│   ├── components/      ← gjenbrukbare UI-deler
-│   ├── lib/
-│   │   ├── api.ts       ← ALLE kall til backend går herfra
-│   │   ├── types.ts     ← typer som speiler docs/API.md
-│   │   └── mock.ts      ← mockdata med samme form som API-et
-│   ├── theme/           ← design-tokens: farger, typografi og avstander
-│   └── assets/
+├── mobile/              ← Expo-appen (SDK 58). Les også mobile/AGENTS.md
+│   ├── src/
+│   │   ├── app/         ← Expo Router-skjermer (hver fil er en skjerm)
+│   │   │   ├── _layout.tsx
+│   │   │   ├── index.tsx           (morgen)
+│   │   │   ├── onboarding.tsx      (oppsett)
+│   │   │   ├── review.tsx          (kveldsgjennomgang)
+│   │   │   ├── log/index.tsx       (logg-liste)
+│   │   │   ├── log/[date].tsx      (én dag)
+│   │   │   └── week.tsx            (ukesrapport)
+│   │   ├── components/  ← gjenbrukbare UI-deler (Screen.tsx er grunnlayouten)
+│   │   ├── lib/
+│   │   │   ├── api.ts   ← ALLE kall til backend går herfra
+│   │   │   ├── types.ts ← typer som speiler docs/API.md
+│   │   │   └── mock.ts  ← mockdata med samme form som API-et
+│   │   └── theme/       ← design-tokens: farger, typografi og avstander
+│   ├── assets/
+│   └── .env.example     ← kopieres til .env
+│                        (importer med @/…, for eksempel `@/theme` og `@/lib/api`)
 └── backend/
     ├── app/
     │   ├── main.py      ← FastAPI-app og ruter
@@ -123,8 +126,8 @@ Ikke legg til nye avhengigheter uten god grunn. Skriv grunnen i commit-meldingen
 
 ## 6. Hvordan delene kobles sammen
 
-1. **`docs/API.md` er avtalen.** Backend implementerer den, og appen bruker den. Endres den, oppdateres `lib/types.ts` og `schemas.py` i samme commit (eller samme PR).
-2. **Appen starter med mockdata** (`lib/mock.ts`) som har nøyaktig samme form som API-et. Dermed blir ingen blokkert. Bytt til ekte API med `EXPO_PUBLIC_USE_MOCK=false`.
+1. **`docs/API.md` er avtalen.** Backend implementerer den, og appen bruker den. Endres den, oppdateres `mobile/src/lib/types.ts` og `backend/app/schemas.py` i samme commit (eller samme PR).
+2. **Appen starter med mockdata** (`src/lib/mock.ts`) som har nøyaktig samme form som API-et. Dermed blir ingen blokkert. Bytt til ekte API med `EXPO_PUBLIC_USE_MOCK=false`.
 3. **Adressen til backend** settes i `mobile/.env` som `EXPO_PUBLIC_API_URL`.
 4. **Mobilen når backend slik:** kjør `uvicorn app.main:app --host 0.0.0.0 --port 8000` og bruk PC-ens IP-adresse på det lokale nettet (samme Wi-Fi). Hvis hackathon-nettet blokkerer trafikk mellom enheter, bruk en tunnel (for eksempel `cloudflared` eller `ngrok`).
 5. **Backend sjekkes på `http://localhost:8000/docs`**, der FastAPI lager interaktiv dokumentasjon automatisk.
@@ -135,27 +138,34 @@ Ikke legg til nye avhengigheter uten god grunn. Skriv grunnen i commit-meldingen
 
 **Backend** (fra `backend/`):
 ```bash
-python -m venv .venv
+py -3.13 -m venv .venv          # Python 3.13 (installer med `py install 3.13`)
 .venv\Scripts\activate          # Windows
 pip install -r requirements.txt
 cp .env.example .env            # fyll inn nøkler
-python seed.py                  # demouke
+python seed.py                  # demouke (når den er laget)
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 pytest
 ```
 
+> **Windows: «En programkontrollpolicy har blokkert denne filen».** Smart App Control blokkerer SQLAlchemy sine kompilerte filer. Installer SQLAlchemy som ren Python i stedet (endre aldri sikkerhetsinnstillingene):
+> `set DISABLE_SQLALCHEMY_CEXT=1` og deretter `pip install --force-reinstall --no-deps --no-binary sqlalchemy SQLAlchemy==2.1.8`
+> I Git Bash: `DISABLE_SQLALCHEMY_CEXT=1 pip install --force-reinstall --no-deps --no-binary sqlalchemy SQLAlchemy==2.1.8`
+
 **App** (fra `mobile/`):
 ```bash
 npm install
+cp .env.example .env
 npx expo start                  # skann QR-koden med Expo Go på iPhonen
 npx tsc --noEmit                # typesjekk
+npx expo lint
+npx expo install <pakke>        # bruk ALLTID denne i stedet for npm install <pakke>
 ```
 
 ---
 
 ## 8. Designregler (mot AI-slop)
 
-Det endelige visuelle designet kommer fra designsteget og legges inn i `mobile/theme/`. Til da gjelder dette:
+Det endelige visuelle designet kommer fra designsteget og legges inn i `mobile/src/theme/`. Til da gjelder dette:
 
 - **Rolig og ren.** Mye luft og et 8-punkts rutenett for avstander (8, 16, 24, 32, 48).
 - **Fargene er tilbakeholdne:** en nøytral bakgrunn, nesten svart tekst og **én** aksentfarge. Ingen gradienter og ingen lilla «AI-glød».
@@ -180,8 +190,9 @@ Det endelige visuelle designet kommer fra designsteget og legges inn i `mobile/t
 - Ingen død kode, ingen `console.log` eller `print` til feilsøking i commits, og ingen hemmeligheter i koden.
 
 **TypeScript (mobile/)**
-- `strict: true`. Ingen `any`. Typer i `lib/types.ts` speiler `docs/API.md`.
-- Alle nettverkskall går gjennom `lib/api.ts`, aldri `fetch` direkte i skjermene.
+- `strict: true`. Ingen `any`. Typer i `src/lib/types.ts` speiler `docs/API.md`.
+- Alle nettverkskall går gjennom `src/lib/api.ts`, aldri `fetch` direkte i skjermene.
+- Expo endrer seg fra versjon til versjon. Sjekk dokumentasjonen for SDK 58 før du bruker et Expo-API (se `mobile/AGENTS.md`).
 - Stil kommer fra `theme/`. Ingen fargekoder eller tall skrevet rett inn i komponentene.
 - Funksjonelle komponenter og hooks. Hold tilstand lokalt så lenge det går, og innfør ikke et eget bibliotek for tilstandshåndtering uten grunn.
 
