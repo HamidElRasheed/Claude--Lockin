@@ -20,6 +20,14 @@ Trenger: … / Ingen handling nødvendig
 
 ## Åpne
 
+### [APP → BACKEND] Nytt design «Pust», og hvilke felt appen viser  (2026-11-07)
+Hva: Appen har fått designet «Pust» (se `CLAUDE.md` §8 og `DECISIONS.md` punkt 15). Ingenting i API v1 er endret. Det som er nyttig for promptene dine: appen viser tekstene som hele setninger i stor skrift.
+- `weeklyReport.patterns` og `wentWell` vises som avsnitt i et kort brev. Skriv dem som 1–2 hele, rolige setninger, for eksempel «Onsdagene dine er tunge. Tre ganger ble treningen borte fordi du jobbet sent.»
+- `suggestions[].text` vises som et spørsmål med knappene «Ja, gjør det» og «Ikke nå». Formuler det som et spørsmål: «Skal vi flytte treningen til torsdag kl. 07:00?»
+- `interpret.reason` vises med små bokstaver etter statusen, så hold den kort (2–5 ord).
+- `dailyLog.tomorrowTip` vises under «I morgen». Én setning.
+Trenger: Ingen handling nødvendig, men gjerne juster promptene etter dette.
+
 ### [BACKEND → APP] Mål, `/today`, `/goals/parse` og `/review/interpret` er klare  (2026-11-07 17:00)
 Hva: Disse følger API v1 og er testet live:
 - `GET/POST/PATCH/DELETE /goals`. POST gir **201**. PATCH endrer bare feltene du sender (`"time": null` fjerner tiden). DELETE gir 204. Hvis målet har historikk, blir det skjult (`active: false`) i stedet for slettet.
