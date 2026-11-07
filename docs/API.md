@@ -104,3 +104,13 @@ Flyten i appen:
 |---|---|---|
 | GET | `/reports/weekly?week=2026-W45` | `WeeklyReport`, eller 404 hvis den ikke er laget |
 | POST | `/reports/weekly/generate` | body `{ "week": string }` → `WeeklyReport` (lages på nytt og lagres) |
+
+### Kalender (Google Kalender-lenker, uten innlogging)
+| Metode | Sti | Body | Svar |
+|---|---|---|---|
+| GET | `/goals/{id}/calendar-link` | – | `{ "url": string }`, eller 404 `goal_not_found` |
+| POST | `/suggestions/apply` | `{ "goalId": string, "change": { "fromDay"?, "toDay"?, "time"? } }` | `{ "goal": Goal, "calendarUrl": string }` |
+
+- `url`/`calendarUrl` er en «add event»-lenke til Google Kalender (`calendar.google.com/calendar/render?action=TEMPLATE…`). Appen åpner den, og Google Kalender viser hendelsen ferdig utfylt. Ingenting skrives til kalenderen før brukeren lagrer selv.
+- Mål med tidspunkt blir en hendelse på 30 minutter, mål uten tidspunkt en heldagshendelse. Startdato er neste av målets dager (fra og med i dag), og hendelsen gjentas ukentlig på målets dager.
+- `/suggestions/apply` er «Ja, gjør det» i ukesrapporten. `fromDay` + `toDay` bytter dagen, bare `toDay` legger til dagen, og `time` setter nytt tidspunkt. 404 `goal_not_found`. 422 `nothing_to_change` hvis verken `toDay` eller `time` er satt.
