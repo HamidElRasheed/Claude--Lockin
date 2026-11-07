@@ -1,8 +1,33 @@
+import {
+  FamiljenGrotesk_400Regular,
+  FamiljenGrotesk_500Medium,
+  FamiljenGrotesk_600SemiBold,
+} from '@expo-google-fonts/familjen-grotesk';
+import { Newsreader_400Regular } from '@expo-google-fonts/newsreader';
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
 
 import { palettes } from '@/theme';
 
+SplashScreen.preventAutoHideAsync();
+
 export default function RootLayout() {
+  const [loaded, error] = useFonts({
+    Newsreader_400Regular,
+    FamiljenGrotesk_400Regular,
+    FamiljenGrotesk_500Medium,
+    FamiljenGrotesk_600SemiBold,
+  });
+
+  useEffect(() => {
+    if (loaded || error) SplashScreen.hideAsync();
+  }, [loaded, error]);
+
+  // Fall back to system fonts rather than a blank app if loading fails.
+  if (!loaded && !error) return null;
+
   return (
     <Stack
       screenOptions={{

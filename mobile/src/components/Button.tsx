@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Icon } from '@/components/Icon';
-import { control, palettes, radius, space, type Tone, type } from '@/theme';
+import { control, fonts, palettes, radius, space, type Tone, type } from '@/theme';
 
 type Variant = 'primary' | 'tonal' | 'text';
 
@@ -45,7 +45,7 @@ export function Button({
     text: { bg: 'transparent', fg: palette.text },
   }[variant];
 
-  const trailing = icon ?? (variant === 'primary' ? 'arrow.right' : undefined);
+  const trailing = icon;
 
   return (
     <Animated.View style={[fill && styles.fill, { transform: [{ scale }] }]}>
@@ -93,8 +93,8 @@ const styles = StyleSheet.create({
   primary: { minHeight: control.primaryHeight },
   text: { paddingHorizontal: space.sm, minHeight: control.iconButton },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  label: { ...type.body, fontWeight: '500' },
-  strong: { fontWeight: '600' },
+  label: { ...type.body, fontFamily: fonts.uiMedium },
+  strong: { ...type.strong },
   pressed: { opacity: 0.88 },
   inactive: { opacity: 0.45 },
 });
