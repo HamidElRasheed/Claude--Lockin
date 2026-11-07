@@ -36,3 +36,6 @@ Thumbs.db
 *.m4a
 *.wav
 tmp/
+
+# Claude Code local worktrees and settings
+/.claude/

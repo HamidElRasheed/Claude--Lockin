@@ -20,6 +20,13 @@ Trenger: … / Ingen handling nødvendig
 
 ## Åpne
 
+### [BACKEND → APP] Ukesrapport og demouke er klare. **Hele backend-API-et v1 er nå ferdig.**  (2026-11-07 18:00)
+Hva:
+- `POST /reports/weekly/generate {"week":"2026-W44"}` lager rapporten (rundt 3–7 sekunder, så vis en lasteindikator) og lagrer den. `GET /reports/weekly?week=` henter den, eller gir 404 `report_not_found`. Andre feil: 404 `no_logs_for_week`, 502 `report_failed` og 422 for ugyldig uke.
+- Hver liste har maks 3 punkter. `suggestions[].change` kan være `null`, eller ha bare `time` (samme dag, nytt tidspunkt), eller `fromDay`/`toDay` + `time`.
+- `python seed.py` lager demobrukeren: 4 mål (Trene, Lese 20 min, Ingen mobil etter 23, og Drikke vann **uten tidspunkt**) og logger for forrige uke og denne uka frem til i dag. Live-eksempel fra rapporten: «Du dropper trening på onsdager fordi du jobber sent. Flytt til torsdag 07:00?»
+Trenger: Forslaget til ukesrapport-skjermen er å vise rapporten for forrige uke (`2026-W44`), og kalle generate hvis GET gir 404. Si fra her når du vil teste mot backend på iPhonen, så setter jeg opp nettverket.
+
 ### [BACKEND → APP] `/review/complete` og `/logs` er klare  (2026-11-07 17:30)
 Hva: Hele kveldsgjennomgangen fungerer live (lyd → `/transcribe` → `/review/interpret` per mål → `/review/complete`) på rundt 5 sekunder totalt.
 - `POST /review/complete` lagrer dagen og returnerer `DailyLog` med AI-ens `summary` og `tomorrowTip`. Gjøres gjennomgangen to ganger samme dag, erstattes den første. **Feiler AI-en, lagres svarene likevel** med en reservetekst i `summary`, så appen trenger ikke håndtere noen feil her. Ukjent mål gir 404.

@@ -24,13 +24,15 @@ Eiere: **APP** = HamidElRasheed (`mobile/`, branch `app/arbeid`), **BACKEND** = 
 - [x] CRUD for `/goals`, `/goals/parse` (AI) og `/today` i norsk tid (BACKEND)
 - [x] `/transcribe` med ElevenLabs Scribe og Groq som reserve, der lyden slettes etterpå (BACKEND)
 - [x] `/review/interpret` med Claude Haiku 5.5 og strukturert output (BACKEND). Testet live fra lyd til tekst til tolkning
-- [ ] `/review/complete` med dagsrapport og «I morgen» (BACKEND)
+- [x] `/review/complete` med dagsrapport og «I morgen» (BACKEND). Hele gjennomgangen testet live på rundt 5 sekunder
 - [ ] Opptaksknapp (hold for å snakke, med haptikk) (APP)
 - [ ] Kveldsgjennomgangen mot mock, deretter mot ekte API (APP)
 
 ## Fase 3: Logg, ukesrapport og oppsett (søndag morgen)
-- [ ] `/logs` og `/reports/weekly` (BACKEND)
-- [ ] `seed.py` med en realistisk demouke, der onsdagsmønsteret for trening er med (BACKEND)
+- [x] `/logs` og `/reports/weekly` med generering (BACKEND)
+- [x] `seed.py` med en realistisk demouke, der onsdagsmønsteret for trening er med (BACKEND). Kjør `python seed.py` og generer deretter forrige uke
+- [ ] Backend tilgjengelig for iPhonen på stedet (LAN-IP eller tunnel) (BACKEND)
+- [ ] Finpuss: dagsrapporten skal bruke brukerens egne tall, ikke målnavnet («lest en halvtime», ikke «20 min») (BACKEND)
 - [ ] Skjermene for dagslogg og ukesrapport (APP)
 - [ ] Oppsett med `/goals/parse` (APP og BACKEND)
 - [ ] Morgenskjermen (APP)
