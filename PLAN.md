@@ -16,8 +16,8 @@ Eiere: **APP** = HamidElRasheed (`mobile/`, branch `app/arbeid`), **BACKEND** = 
 - [ ] Test at iPhonen når backend over nettet på stedet (begge)
 
 ## Fase 1: Design (lørdag ettermiddag)
-- [ ] Skisser av de fire skjermene og oppsettet (APP)
-- [ ] Ferdig design med design-tokens i `mobile/theme/` (APP)
+- [x] Skisser av de fire skjermene og oppsettet (APP)
+- [x] Ferdig design med design-tokens i `mobile/theme/` (APP)
 
 ## Fase 2: Kveldsgjennomgangen fra start til slutt (lørdag kveld) ⭐
 - [x] Modeller: Goal, DailyLog, GoalEntry og WeeklyReport, med `user_id` (BACKEND)
@@ -25,7 +25,7 @@ Eiere: **APP** = HamidElRasheed (`mobile/`, branch `app/arbeid`), **BACKEND** = 
 - [x] `/transcribe` med ElevenLabs Scribe og Groq som reserve, der lyden slettes etterpå (BACKEND)
 - [x] `/review/interpret` med Claude Haiku 5.5 og strukturert output (BACKEND). Testet live fra lyd til tekst til tolkning
 - [x] `/review/complete` med dagsrapport og «I morgen» (BACKEND). Hele gjennomgangen testet live på rundt 5 sekunder
-- [ ] Opptaksknapp (hold for å snakke, med haptikk) (APP)
+- [x] Opptaksknapp (hold for å snakke, med haptikk) (APP)
 - [ ] Kveldsgjennomgangen mot mock, deretter mot ekte API (APP)
 
 ## Fase 3: Logg, ukesrapport og oppsett (søndag morgen)
@@ -33,9 +33,9 @@ Eiere: **APP** = HamidElRasheed (`mobile/`, branch `app/arbeid`), **BACKEND** = 
 - [x] `seed.py` med en realistisk demouke, der onsdagsmønsteret for trening er med (BACKEND). Kjør `python seed.py` og generer deretter forrige uke
 - [ ] Backend tilgjengelig for iPhonen på stedet (LAN-IP eller tunnel) (BACKEND)
 - [ ] Finpuss: dagsrapporten skal bruke brukerens egne tall, ikke målnavnet («lest en halvtime», ikke «20 min») (BACKEND)
-- [ ] Skjermene for dagslogg og ukesrapport (APP)
-- [ ] Oppsett med `/goals/parse` (APP og BACKEND)
-- [ ] Morgenskjermen (APP)
+- [x] Skjermene for dagslogg og ukesrapport (APP)
+- [x] Oppsett med `/goals/parse` (APP og BACKEND)
+- [x] Morgenskjermen (APP)
 
 ## Fase 4: Finpuss og levering (søndag kl. 10–14)
 - [ ] Gå gjennom alle tilstander: lasting, tom og feil (APP)
