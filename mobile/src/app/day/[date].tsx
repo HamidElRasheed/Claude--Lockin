@@ -34,15 +34,17 @@ export default function LogDayScreen() {
     <Screen tone="dawn">
       <View style={styles.header}>
         <IconButton icon="chevron.left" label="Tilbake" onPress={() => router.back()} />
-        <Text style={styles.caption}>{date ? formatDay(date) : ''}</Text>
       </View>
+      <Voice tone="dawn">{date ? formatDay(date) : ''}</Voice>
 
       {state.kind === 'loading' && <Voice tone="dawn" muted>Et øyeblikk.</Voice>}
       {state.kind === 'missing' && <Voice tone="dawn" muted>Fant ingen kveld for denne dagen.</Voice>}
 
       {state.kind === 'ready' && (
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <Voice tone="dawn">{state.log.summary}</Voice>
+          <Voice tone="dawn" muted>
+            {state.log.summary}
+          </Voice>
 
           <View style={styles.entries}>
             {state.log.entries.map((entry) => (
@@ -72,8 +74,8 @@ export default function LogDayScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginBottom: space.lg },
-  content: { gap: space.xl, paddingBottom: space.xl },
+  header: { flexDirection: 'row', marginBottom: space.md },
+  content: { gap: space.xl, paddingTop: space.sm, paddingBottom: space.xl },
   entries: { gap: space.md },
   entry: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
   entryText: { flex: 1, gap: 2, marginTop: -6 },

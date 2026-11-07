@@ -3,19 +3,19 @@ import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
-import { Orb } from '@/components/Orb';
 import { Screen } from '@/components/Screen';
+import { StatusMark } from '@/components/StatusMark';
 import { Voice } from '@/components/Voice';
 import { api } from '@/lib/api';
-import { countWord, greeting } from '@/lib/words';
 import type { Today } from '@/lib/types';
+import { countWord, formatDay, greeting } from '@/lib/words';
 import { palettes, space, type } from '@/theme';
 
 const palette = palettes.dawn;
 
 type State = { kind: 'loading' } | { kind: 'error' } | { kind: 'ready'; today: Today };
 
-// Morning: the app tells you, in one calm sentence, what today holds.
+// Morning: date, a big greeting, one line about the day, then the plan as a plain list.
 export default function MorningScreen() {
   const router = useRouter();
   const [state, setState] = useState<State>({ kind: 'loading' });
@@ -35,26 +35,33 @@ export default function MorningScreen() {
     fetchData();
   };
 
+  const date = state.kind === 'ready' ? formatDay(state.today.date) : '';
+
   return (
     <Screen tone="dawn" inTabs>
-      <View style={styles.orb}>
-        <Orb tone="dawn" size={150} />
-      </View>
-
+      <Text style={styles.date}>{date}</Text>
       <Voice tone="dawn">{greeting(new Date())}</Voice>
 
-      {state.kind === 'loading' && <Voice tone="dawn" muted>Et øyeblikk.</Voice>}
+      {state.kind === 'loading' && (
+        <View style={styles.gap}>
+          <Voice tone="dawn" muted>Et øyeblikk.</Voice>
+        </View>
+      )}
 
       {state.kind === 'error' && (
         <>
-          <Voice tone="dawn" muted>Fikk ikke hentet dagen din.</Voice>
+          <View style={styles.gap}>
+            <Voice tone="dawn" muted>Fikk ikke hentet dagen din.</Voice>
+          </View>
           <View style={styles.footer}>
             <Button tone="dawn" label="Prøv igjen" onPress={retry} />
           </View>
         </>
       )}
 
-      {state.kind === 'ready' && <Ready today={state.today} onReview={() => router.push('/review')} onSetup={() => router.push('/onboarding')} />}
+      {state.kind === 'ready' && (
+        <Ready today={state.today} onReview={() => router.push('/review')} onSetup={() => router.push('/onboarding')} />
+      )}
     </Screen>
   );
 }
@@ -66,7 +73,7 @@ function Ready({ today, onReview, onSetup }: { today: Today; onReview: () => voi
     return (
       <>
         <View style={styles.gap}>
-          <Voice tone="dawn" muted>Ingen mål i dag. Nyt den.</Voice>
+          <Voice tone="dawn" muted>Ingen mål i dag.</Voice>
         </View>
         <View style={styles.footer}>
           <Button tone="dawn" label="Sett opp mål" onPress={onSetup} />
@@ -75,7 +82,7 @@ function Ready({ today, onReview, onSetup }: { today: Today; onReview: () => voi
     );
   }
 
-  const intro = `${countWord(today.goals.length)} i dag. Først ${first.title.toLowerCase()}${first.time ? `, kl. ${first.time}` : ''}.`;
+  const intro = `${countWord(today.goals.length)} i dag. Først ${first.title.toLowerCase()}${first.time ? ` kl. ${first.time}` : ''}.`;
 
   return (
     <>
@@ -84,17 +91,20 @@ function Ready({ today, onReview, onSetup }: { today: Today; onReview: () => voi
       </View>
 
       <View style={styles.list}>
-        {today.goals.map((goal, i) => (
+        {today.goals.map((goal) => (
           <View key={goal.id} style={styles.row}>
-            <Text style={[styles.time, i === 0 && styles.timeFirst]}>{goal.time ?? '–'}</Text>
-            <Text style={[styles.goal, i > 0 && styles.goalLater]}>{goal.title}</Text>
+            <Text style={styles.goal}>{goal.title}</Text>
+            <Text style={styles.time}>{goal.time ?? 'I dag'}</Text>
           </View>
         ))}
       </View>
 
       <View style={styles.footer}>
         {today.reviewDone ? (
-          <Text style={styles.caption}>Kvelden er gjort. Sov godt i natt.</Text>
+          <View style={styles.doneRow}>
+            <StatusMark status="done" tone="dawn" />
+            <Text style={styles.caption}>Kvelden er gjort.</Text>
+          </View>
         ) : (
           <Button tone="dawn" label="Start kvelden" onPress={onReview} />
         )}
@@ -104,14 +114,20 @@ function Ready({ today, onReview, onSetup }: { today: Today; onReview: () => voi
 }
 
 const styles = StyleSheet.create({
-  orb: { position: 'absolute', top: -150, right: -130 },
-  gap: { marginTop: space.lg },
-  list: { marginTop: 'auto', gap: space.md },
-  row: { flexDirection: 'row', alignItems: 'baseline', gap: space.md },
-  time: { ...type.caption, width: 48, color: palette.textMuted, fontVariant: ['tabular-nums'] },
-  timeFirst: { ...type.strong, color: palette.text },
+  date: { ...type.caption, color: palette.textMuted, marginBottom: space.xs },
+  gap: { marginTop: space.sm },
+  list: { marginTop: space.xl, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: palette.line },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: space.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: palette.line,
+  },
   goal: { ...type.body, color: palette.text },
-  goalLater: { color: palette.textMuted },
-  footer: { marginTop: space.xxl, gap: space.sm },
+  time: { ...type.body, color: palette.textMuted, fontVariant: ['tabular-nums'] },
+  footer: { marginTop: 'auto', paddingTop: space.lg, gap: space.sm },
+  doneRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, justifyContent: 'center' },
   caption: { ...type.caption, color: palette.textMuted },
 });

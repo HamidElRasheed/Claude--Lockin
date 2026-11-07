@@ -33,5 +33,5 @@ export function Screen({ tone = 'dawn', inTabs = false, title, children }: Props
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  container: { flex: 1, paddingHorizontal: space.xl, paddingTop: space.xxl, paddingBottom: space.lg },
+  container: { flex: 1, paddingHorizontal: space.lg - 4, paddingTop: space.lg, paddingBottom: space.md },
 });

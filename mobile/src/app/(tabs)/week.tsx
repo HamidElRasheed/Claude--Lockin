@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
-import { Orb } from '@/components/Orb';
 import { Screen } from '@/components/Screen';
 import { Voice } from '@/components/Voice';
 import { ApiError, api } from '@/lib/api';
@@ -47,9 +46,9 @@ export default function WeekScreen() {
 
   return (
     <Screen tone="dawn" inTabs>
+      <Text style={styles.caption}>{weekNumber ? `Uke ${weekNumber}` : 'Forrige uke'}</Text>
       <View style={styles.header}>
-        <Orb tone="dawn" size={14} />
-        <Text style={styles.caption}>{weekNumber ? `Uke ${weekNumber}` : 'Uken din'}</Text>
+        <Voice tone="dawn">Uken din</Voice>
       </View>
 
       {state.kind === 'loading' && <Voice tone="dawn" muted>Skriver brevet ditt. Det tar noen sekunder.</Voice>}
@@ -101,9 +100,9 @@ function Letter({ report }: { report: WeeklyReport }) {
     <>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.letter} showsVerticalScrollIndicator={false}>
         {report.patterns.map((p, i) => (
-          <Voice key={`p${i}`} tone="dawn" muted={i > 0}>
+          <Text key={`p${i}`} style={styles.pattern}>
             {p}
-          </Voice>
+          </Text>
         ))}
         {report.wentWell.map((w, i) => (
           <Voice key={`w${i}`} tone="dawn" muted>
@@ -151,10 +150,11 @@ function Letter({ report }: { report: WeeklyReport }) {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginBottom: space.xl },
-  caption: { ...type.caption, color: palette.textMuted, flex: 1 },
+  header: { marginTop: space.xs, marginBottom: space.lg },
+  pattern: { ...type.lead, color: palette.text },
+  caption: { ...type.caption, color: palette.textMuted },
   scroll: { flex: 1 },
-  letter: { gap: space.lg, paddingBottom: space.lg },
+  letter: { gap: space.md, paddingBottom: space.lg },
   footer: { gap: space.sm, paddingTop: space.md },
   body: { ...type.body, color: palette.text },
   card: { borderTopWidth: 1, borderTopColor: palette.text, paddingTop: space.md, gap: space.sm, marginTop: space.md },
