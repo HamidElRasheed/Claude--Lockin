@@ -1,86 +1,93 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { IconButton } from '@/components/IconButton';
+import { Button } from '@/components/Button';
+import { DayReport } from '@/components/DayReport';
+import { Icon } from '@/components/Icon';
 import { Screen } from '@/components/Screen';
-import { StatusMark } from '@/components/StatusMark';
 import { Voice } from '@/components/Voice';
-import { api } from '@/lib/api';
-import type { DailyLog, GoalStatus } from '@/lib/types';
-import { formatDay } from '@/lib/words';
-import { palettes, space, type } from '@/theme';
+import { api, ApiError } from '@/lib/api';
+import { capitalize, dateLabel, weekdayName } from '@/lib/days';
+import type { DailyLog } from '@/lib/types';
+import { control, palettes, space, type } from '@/theme';
 
 const palette = palettes.dawn;
-const statusLabel: Record<GoalStatus, string> = { done: 'Gjort', partial: 'Delvis', missed: 'Ikke i dag' };
 
-type State = { kind: 'loading' } | { kind: 'missing' } | { kind: 'ready'; log: DailyLog };
+type State = { kind: 'loading' } | { kind: 'missing' } | { kind: 'error' } | { kind: 'ready'; log: DailyLog };
 
-// One day: goal statuses with the reasons the user gave, a short report and one tip for tomorrow.
+// One day from the log: the same report as right after the evening, in the light mood.
 export default function LogDayScreen() {
   const router = useRouter();
   const { date } = useLocalSearchParams<{ date: string }>();
   const [state, setState] = useState<State>({ kind: 'loading' });
 
-  useEffect(() => {
+  const fetchLog = useCallback(() => {
     if (!date) return;
     api
       .getLog(date)
       .then((log) => setState({ kind: 'ready', log }))
-      .catch(() => setState({ kind: 'missing' }));
+      .catch((error: unknown) =>
+        setState({ kind: error instanceof ApiError && error.status === 404 ? 'missing' : 'error' }),
+      );
   }, [date]);
+
+  useEffect(fetchLog, [fetchLog]);
+
+  const retry = () => {
+    setState({ kind: 'loading' });
+    fetchLog();
+  };
 
   return (
     <Screen tone="dawn">
-      <View style={styles.header}>
-        <IconButton icon="chevron.left" label="Tilbake" onPress={() => router.back()} />
-      </View>
-      <Voice tone="dawn">{date ? formatDay(date) : ''}</Voice>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Tilbake til loggen"
+        hitSlop={8}
+        onPress={() => router.back()}
+        style={({ pressed }) => [styles.back, pressed && styles.pressed]}
+      >
+        <Icon name="chevron.left" color={palette.text} size={18} />
+        <Text style={styles.backText}>Logg</Text>
+      </Pressable>
 
-      {state.kind === 'loading' && <Voice tone="dawn" muted>Et øyeblikk.</Voice>}
-      {state.kind === 'missing' && <Voice tone="dawn" muted>Fant ingen kveld for denne dagen.</Voice>}
-
-      {state.kind === 'ready' && (
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <Voice tone="dawn" muted>
-            {state.log.summary}
-          </Voice>
-
-          <View style={styles.entries}>
-            {state.log.entries.map((entry) => (
-              <View key={entry.goalId} style={styles.entry}>
-                <StatusMark status={entry.status} tone="dawn" />
-                <View style={styles.entryText}>
-                  <Text style={styles.goal}>{entry.goalTitle}</Text>
-                  <Text style={styles.caption}>
-                    {statusLabel[entry.status]}
-                    {entry.reason ? ` · ${entry.reason.toLowerCase()}` : ''}
-                  </Text>
-                </View>
-              </View>
-            ))}
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {date && (
+          <View style={styles.header}>
+            <Text style={styles.caption}>{dateLabel(date)}</Text>
+            <Voice tone="dawn">{capitalize(weekdayName(date))}</Voice>
           </View>
+        )}
 
-          {state.log.reflection && <Text style={styles.reflection}>«{state.log.reflection}»</Text>}
-
-          <View style={styles.tomorrow}>
-            <Text style={styles.caption}>I morgen</Text>
-            <Text style={styles.goal}>{state.log.tomorrowTip}</Text>
+        {state.kind === 'loading' && <Voice tone="dawn" muted>Et øyeblikk …</Voice>}
+        {state.kind === 'missing' && <Voice tone="dawn" muted>Fant ingen kveld for denne dagen.</Voice>}
+        {state.kind === 'error' && (
+          <View style={styles.gap}>
+            <Voice tone="dawn" muted>Fikk ikke hentet dagen.</Voice>
+            <Button tone="dawn" variant="tonal" label="Prøv igjen" onPress={retry} fill={false} />
           </View>
-        </ScrollView>
-      )}
+        )}
+        {state.kind === 'ready' && <DayReport log={state.log} tone="dawn" scoreLabel="mål denne dagen" />}
+      </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', marginBottom: space.md },
-  content: { gap: space.xl, paddingTop: space.sm, paddingBottom: space.xl },
-  entries: { gap: space.md },
-  entry: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
-  entryText: { flex: 1, gap: 2, marginTop: -6 },
-  goal: { ...type.body, color: palette.text },
-  caption: { ...type.caption, color: palette.textMuted },
-  reflection: { ...type.body, color: palette.textMuted },
-  tomorrow: { borderTopWidth: 1, borderTopColor: palette.text, paddingTop: space.md, gap: space.xs },
+  back: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    alignSelf: 'flex-start',
+    minHeight: control.iconButton,
+    marginLeft: -space.sm + 2,
+    marginTop: -space.sm,
+  },
+  pressed: { opacity: 0.5 },
+  backText: { ...type.body, fontWeight: '500', color: palette.text },
+  content: { gap: space.lg, paddingTop: space.sm, paddingBottom: space.xl },
+  header: { gap: 2 },
+  caption: { ...type.caption, ...type.strong, color: palette.textMuted },
+  gap: { gap: space.lg, alignItems: 'flex-start' },
 });
