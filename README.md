@@ -6,15 +6,15 @@ Laget på **Oslo Sprint, 6.–8. november 2026**, av HamidElRasheed (app) og aba
 
 ## Skjermbilder
 
-| I dag | Nytt mål | Dagene |
+| I dag | Kveld: snakk om dagen | Dagene |
 |---|---|---|
-| <img src="docs/screenshots/1-i-dag.png" width="240" alt="I dag: dagens mål og knappen Nytt mål"> | <img src="docs/screenshots/2-nytt-maal.png" width="240" alt="Legg til et mål på et par trykk"> | <img src="docs/screenshots/3-dagene.png" width="240" alt="Dagene med dagspoeng 1–10"> |
+| <img src="docs/screenshots/1-i-dag.png" width="240" alt="I dag: dagens mål og knappen Nytt mål"> | <img src="docs/screenshots/0-kveld.jpg" width="240" alt="Kvelden: trykk og fortell om dagen, AI-en krysser av målene"> | <img src="docs/screenshots/3-dagene.png" width="240" alt="Dagene med dagspoeng 1–10"> |
 
-| Uka di | Sirkelen (forhåndsvisning) | Personvern |
+| Uka di | Nytt mål | Sirkelen (forhåndsvisning) |
 |---|---|---|
-| <img src="docs/screenshots/4-uka-di.png" width="240" alt="Ukesrapport med dagspoeng, mønstre og forslag"> | <img src="docs/screenshots/5-sirkelen.jpg" width="240" alt="Vennesirkel med ukens duell og toppliste"> | <img src="docs/screenshots/6-personvern.png" width="240" alt="Kort om dataene dine første gang appen åpnes"> |
+| <img src="docs/screenshots/4-uka-di.png" width="240" alt="Ukesrapport med dagspoeng, mønstre og forslag"> | <img src="docs/screenshots/2-nytt-maal.png" width="240" alt="Legg til et mål på et par trykk"> | <img src="docs/screenshots/5-sirkelen.jpg" width="240" alt="Vennesirkel med ukens duell og toppliste"> |
 
-Skjermbildene er tatt med demodata. Kveldsgjennomgangen, der du snakker om dagen, vises live i demoen.
+Kvelden: du trykker på knappen og forteller fritt om dagen. Tale blir til tekst (ElevenLabs), Claude krysser av målene og spør om de du ikke nevnte. Skjermbildene er tatt med demodata. Selve samtalen vises live i demoen, og personvernkortet ligger i `docs/screenshots/6-personvern.png`.
 
 ## Problemet
 
