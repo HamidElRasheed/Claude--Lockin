@@ -22,16 +22,16 @@ def test_seed_creates_demo_and_is_rerunnable(monkeypatch) -> None:
     first = seed.run()
     second = seed.run()
     assert first == second
-    # 7 days of week 44 + Mon-Fri of week 45
-    assert first["goals"] == 4 and first["logs"] == 12
+    # weeks 42 and 43 (history), 7 days of week 44 + Mon-Fri of week 45
+    assert first["goals"] == 4 and first["logs"] == 26
 
     with SessionLocal() as db:
         assert count(db, models.Goal) == 5  # other users are untouched
-        assert count(db, models.DailyLog) == 12
+        assert count(db, models.DailyLog) == 26
         assert count(db, models.GoalEntry) == first["entries"]
 
         logs = db.scalars(select(models.DailyLog).order_by(models.DailyLog.date)).all()
-        assert logs[0].date == date(2026, 10, 26) and logs[-1].date == date(2026, 11, 6)
+        assert logs[0].date == date(2026, 10, 12) and logs[-1].date == date(2026, 11, 6)
         assert all(log.summary and log.tomorrow_tip and log.reflection for log in logs)
 
         wednesday = next(log for log in logs if log.date == date(2026, 10, 28))
@@ -49,4 +49,4 @@ def test_seed_creates_demo_and_is_rerunnable(monkeypatch) -> None:
 
 def test_seed_on_monday_only_previous_week(monkeypatch) -> None:
     monkeypatch.setattr(clock, "today", lambda: date(2026, 11, 2))
-    assert seed.run()["logs"] == 7
+    assert seed.run()["logs"] == 21  # two history weeks + the previous week

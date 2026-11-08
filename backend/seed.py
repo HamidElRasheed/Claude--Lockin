@@ -122,11 +122,39 @@ def wipe(db, user_id: str) -> None:
     db.execute(delete(models.Goal).where(models.Goal.user_id == user_id))
 
 
+# Two earlier weeks so the progress dashboard has a month of history. Same patterns
+# (Wednesday training lost to work, tired reading), slightly different days and words.
+EARLIER_WEEKS = [
+    {  # three weeks ago
+        "mon": ({}, "Godt i gang. Trente før jobb.", "Alle målene holdt. Morgenøkta ga deg en god start.", "Legg fram treningstøyet kvelden før onsdag."),
+        "tue": ({}, "Vanlig tirsdag.", "En jevn dag der alt holdt.", "Les litt før du setter deg med mobilen."),
+        "wed": ({"trene": ("missed", "jobbet sent", "Jobbet sent, rakk ikke trening.")}, "Lang onsdag på jobb.", "Treningen falt bort fordi du jobbet sent. Resten holdt.", "Vurder å flytte onsdagsøkta til en annen morgen."),
+        "thu": ({"vann": ("partial", "glemte flaska", "Glemte flaska hjemme.")}, "Grei dag, men glemte vannflaska.", "Vannet ble glemt, resten holdt.", "Legg flaska ved døra i kveld."),
+        "fri": ({"lese": ("partial", "var trøtt", "Leste litt, var trøtt.")}, "Trent i morges, sliten nå.", "Morgenøkta holdt. Lesingen ble kort fordi du var trøtt.", "Les om formiddagen i helga."),
+        "sat": ({}, "Rolig lørdag.", "Lesingen og vannet holdt.", "Mobilregelen gjelder igjen i morgen."),
+        "sun": ({}, "Fin søndag med bok.", "Alt holdt i dag.", "Treningen i morgen er klokka sju."),
+    },
+    {  # two weeks ago
+        "mon": ({"lese": ("partial", "var trøtt", "Bare noen sider.")}, "Trente, men var trøtt på kvelden.", "Treningen holdt. Lesingen ble kort.", "Les rett etter middag i morgen."),
+        "tue": ({}, "Roligere dag.", "Alle målene holdt.", "Onsdag blir lang. Planlegg treningen."),
+        "wed": ({"trene": ("missed", "jobbet sent", "Nei, jobbet sent igjen.")}, "Jobbet til ni.", "Treningen falt bort fordi du jobbet sent, som forrige onsdag.", "Prøv en kort økt torsdag morgen."),
+        "thu": ({}, "Fikk lest mye i kveld.", "Alt holdt, og du leste lenger enn planlagt.", "Legg fram tøyet til fredagsøkta."),
+        "fri": ({}, "Bra økt i morges.", "Alle målene holdt.", "Ta med vann når du skal ut i morgen."),
+        "sat": ({"vann": ("partial", "var ute hele dagen", "Var ute og glemte å drikke.")}, "Ute hele dagen.", "Vannet ble glemt mens du var ute.", "Ta med en flaske neste gang."),
+        "sun": ({"mobil": ("partial", "så på serie", "La den bort litt over elleve.")}, "Rolig søndag.", "Mobilen ble liggende litt for lenge.", "Lad mobilen utenfor soverommet."),
+    },
+]
+
+
 def seed_days(today: date) -> list[tuple[date, tuple]]:
-    """(date, day plan) for every day of the previous ISO week and this week before today."""
+    """(date, day plan) for four weeks: two earlier weeks, the previous ISO week, and this week before today."""
     this_monday = today - timedelta(days=today.weekday())
     prev_monday = this_monday - timedelta(days=7)
-    days = [(prev_monday + timedelta(days=i), PREVIOUS_WEEK[ALL_DAYS[i]]) for i in range(7)]
+    days = []
+    for offset, plan in zip((21, 14), EARLIER_WEEKS):
+        monday = this_monday - timedelta(days=offset)
+        days += [(monday + timedelta(days=i), plan[ALL_DAYS[i]]) for i in range(7)]
+    days += [(prev_monday + timedelta(days=i), PREVIOUS_WEEK[ALL_DAYS[i]]) for i in range(7)]
     days += [
         (this_monday + timedelta(days=i), CURRENT_WEEK[ALL_DAYS[i]]) for i in range(today.weekday())
     ]
