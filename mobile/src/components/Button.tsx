@@ -20,7 +20,7 @@ type Props = {
 };
 
 // Three levels, one look:
-// primary = the one thing to do here (warm, full width, arrow), tonal = a real secondary choice,
+// primary = the one thing to do here (black pill, full width), tonal = a grey secondary pill,
 // text = a quiet way out. All give a soft press-in and a light tap of haptics.
 export function Button({
   label,
@@ -72,7 +72,7 @@ export function Button({
           <ActivityIndicator color={colors.fg} />
         ) : (
           <View style={styles.row}>
-            <Text style={[styles.label, variant === 'primary' && styles.strong, { color: colors.fg }]}>{label}</Text>
+            <Text style={[styles.label, variant !== 'text' && styles.strong, { color: colors.fg }]}>{label}</Text>
             {trailing && <Icon name={trailing} color={colors.fg} size={variant === 'primary' ? 17 : 15} />}
           </View>
         )}
@@ -95,6 +95,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   label: { ...type.body, fontWeight: '500' },
   strong: { ...type.strong },
-  pressed: { opacity: 0.88 },
-  inactive: { opacity: 0.45 },
+  pressed: { opacity: 0.8 },
+  inactive: { opacity: 0.35 },
 });

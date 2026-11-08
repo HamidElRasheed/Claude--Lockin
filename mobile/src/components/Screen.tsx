@@ -3,18 +3,19 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
+import { TAB_BAR_SPACE } from '@/components/TabBar';
 import { Voice } from '@/components/Voice';
 import { palettes, space, type Tone } from '@/theme';
 
 type Props = {
   tone?: Tone;
-  // Tab screens leave the bottom edge to the tab bar.
+  // Tab screens leave the bottom to the floating tab bar.
   inTabs?: boolean;
   title?: string;
   children?: ReactNode;
 };
 
-// Base layout for every screen: mood (dawn/dusk), safe area, generous margins.
+// Base layout for every screen: mood (dawn/dusk), safe area, 20 pt side margins.
 const allEdges: Edge[] = ['top', 'right', 'bottom', 'left'];
 const tabEdges: Edge[] = ['top', 'right', 'left'];
 
@@ -23,7 +24,7 @@ export function Screen({ tone = 'dawn', inTabs = false, title, children }: Props
   return (
     <SafeAreaView edges={inTabs ? tabEdges : allEdges} style={[styles.safe, { backgroundColor: palette.background }]}>
       <StatusBar style={tone === 'dusk' ? 'light' : 'dark'} />
-      <View style={styles.container}>
+      <View style={[styles.container, inTabs && styles.inTabs]}>
         {title ? <Voice tone={tone}>{title}</Voice> : null}
         {children}
       </View>
@@ -33,5 +34,6 @@ export function Screen({ tone = 'dawn', inTabs = false, title, children }: Props
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  container: { flex: 1, paddingHorizontal: space.lg - 4, paddingTop: space.lg, paddingBottom: space.md },
+  container: { flex: 1, paddingHorizontal: space.lg - 4, paddingTop: space.md, paddingBottom: space.md },
+  inTabs: { paddingBottom: TAB_BAR_SPACE },
 });

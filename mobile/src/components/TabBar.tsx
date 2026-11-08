@@ -5,28 +5,38 @@ import type { SFSymbol } from 'expo-symbols';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Icon } from '@/components/Icon';
-import { control, palettes, space, type } from '@/theme';
+import { control, palettes, radius, space, type } from '@/theme';
 
 const palette = palettes.dawn;
 
-const tabs: Record<string, { label: string; icon: SFSymbol }> = {
-  index: { label: 'I dag', icon: 'sun.max' },
-  log: { label: 'Dagene', icon: 'book.closed' },
-  week: { label: 'Uken', icon: 'chart.line.uptrend.xyaxis' },
-  // "Mål" is reached from the I dag screen; the bar shows the four places plus the evening orb.
-  progress: { label: 'Fremgang', icon: 'chart.bar' },
-};
+// Floating capsule: 20 from the sides, 28 from the bottom, 68 tall.
+const BAR_HEIGHT = 68;
+const BAR_BOTTOM = 28;
+const MIC = 52;
 
-// Bottom menu: four calm tabs and, in the middle, the evening review as a small glowing orb.
-// The orb is the one thing that pulls the eye, the same light the user talks to at night.
-export function TabBar({ state, navigateToTab, insets }: BottomTabBarProps) {
+// Room tab screens leave at the bottom so nothing hides behind the capsule.
+export const TAB_BAR_SPACE = BAR_HEIGHT + BAR_BOTTOM + space.md;
+
+type Tab = { label: string; icon: SFSymbol; activeIcon: SFSymbol };
+
+// "Mål" is reached from the I dag screen, so it is not in the bar.
+const tabs: Record<string, Tab> = {
+  index: { label: 'I dag', icon: 'house', activeIcon: 'house.fill' },
+  log: { label: 'Dagene', icon: 'book.closed', activeIcon: 'book.closed.fill' },
+  week: { label: 'Uken', icon: 'chart.bar', activeIcon: 'chart.bar.fill' },
+  progress: { label: 'Fremgang', icon: 'chart.pie', activeIcon: 'chart.pie.fill' },
+};
+const leftTabs = ['index', 'log'];
+
+// Bottom menu: two tabs, the black microphone for the evening review, two tabs.
+export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
   const router = useRouter();
   const routes = state.routes.filter((r) => tabs[r.name]);
-  const half = Math.ceil(routes.length / 2);
+  const activeKey = state.routes[state.index]?.key;
 
   const renderTab = (route: (typeof routes)[number]) => {
     const meta = tabs[route.name];
-    const focused = state.routes[state.index]?.key === route.key;
+    const focused = activeKey === route.key;
     const color = focused ? palette.text : palette.textMuted;
     return (
       <Pressable
@@ -38,67 +48,73 @@ export function TabBar({ state, navigateToTab, insets }: BottomTabBarProps) {
           if (!focused) Haptics.selectionAsync();
           navigateToTab(route.key);
         }}
-        style={styles.tab}
+        style={({ pressed }) => [styles.tab, pressed && styles.pressed]}
       >
-        <Icon name={meta.icon} color={focused ? palette.action : color} size={20} />
-        <Text style={[styles.label, { color }, focused && styles.labelActive]}>{meta.label}</Text>
+        <Icon name={focused ? meta.activeIcon : meta.icon} color={color} size={22} />
+        <Text style={[styles.label, { color }]}>{meta.label}</Text>
       </Pressable>
     );
   };
 
   return (
-    <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, space.sm) }]}>
-      {routes.slice(0, half).map(renderTab)}
+    <View style={styles.bar}>
+      {routes.filter((r) => leftTabs.includes(r.name)).map(renderTab)}
 
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Start kveldsgjennomgangen"
+        hitSlop={4}
         onPress={() => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           router.push('/review');
         }}
-        style={styles.tab}
+        style={({ pressed }) => [styles.mic, pressed && styles.micPressed]}
       >
-        {({ pressed }) => (
-          <>
-            <View style={[styles.orb, pressed && styles.orbPressed]}>
-              <Icon name="moon.stars" color={palettes.dusk.background} size={20} />
-            </View>
-            <Text style={[styles.label, styles.orbLabel]}>Kveld</Text>
-          </>
-        )}
+        <Icon name="mic.fill" color={palette.actionText} size={22} />
       </Pressable>
 
-      {routes.slice(half).map(renderTab)}
+      {routes.filter((r) => !leftTabs.includes(r.name)).map(renderTab)}
     </View>
   );
 }
 
-const ORB = 54;
-
 const styles = StyleSheet.create({
   bar: {
+    position: 'absolute',
+    left: space.lg - 4,
+    right: space.lg - 4,
+    bottom: BAR_BOTTOM,
+    height: BAR_HEIGHT,
+    borderRadius: radius.pill,
+    paddingHorizontal: space.md,
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: palette.surface,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: palette.line,
-    paddingTop: space.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.line,
+    shadowColor: palette.text,
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
   },
-  tab: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', gap: 4, minHeight: control.iconButton + 8 },
-  label: { ...type.caption, fontSize: 11, lineHeight: 14 },
-  labelActive: { ...type.strong },
-  orb: {
-    width: ORB,
-    height: ORB,
-    borderRadius: ORB / 2,
-    marginTop: -ORB / 2,
-    backgroundColor: palette.orb,
+  tab: {
+    minWidth: 56,
+    minHeight: control.iconButton + space.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 4,
-    borderColor: palette.surface,
+    gap: 3,
   },
-  orbPressed: { transform: [{ scale: 0.94 }] },
-  orbLabel: { ...type.strong, color: palette.text },
+  pressed: { opacity: 0.6 },
+  label: { ...type.caption, fontSize: 11, lineHeight: 13, fontWeight: '600' },
+  mic: {
+    width: MIC,
+    height: MIC,
+    borderRadius: MIC / 2,
+    backgroundColor: palette.action,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  micPressed: { transform: [{ scale: 0.94 }] },
 });

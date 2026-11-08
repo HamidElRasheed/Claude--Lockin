@@ -10,6 +10,7 @@ import {
   mockInterpretDay,
   mockLogs,
   mockParseGoals,
+  mockStats,
   mockToday,
   mockTranscribe,
   mockWeeklyReport,
@@ -22,6 +23,7 @@ import type {
   GoalDraft,
   GoalEntry,
   Interpretation,
+  Stats,
   Suggestion,
   Today,
   WeeklyReport,
@@ -125,6 +127,10 @@ export const api = {
     USE_MOCK
       ? later({ goal: mockGoals[0], calendarUrl: 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=Trene' }, 500)
       : request('/suggestions/apply', send('POST', { goalId, change })),
+
+  // Plain counts for the last `weeks` weeks, no AI. Answers immediately.
+  getStats: (weeks: number): Promise<Stats> =>
+    USE_MOCK ? later(mockStats, 300) : request(`/stats?weeks=${weeks}`),
 
   // Fetch the stored report; if none exists yet, ask the backend to write it (3–7 s).
   getWeeklyReport: async (week: string): Promise<WeeklyReport> => {
