@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Group, Row } from '@/components/Group';
+import { Icon } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
 import { LargeTitle } from '@/components/LargeTitle';
 import { Screen } from '@/components/Screen';
@@ -13,7 +14,9 @@ import { Voice } from '@/components/Voice';
 import { api } from '@/lib/api';
 import type { DailyLog, Stats, Today } from '@/lib/types';
 import { formatDay, localDate } from '@/lib/words';
-import { space } from '@/theme';
+import { palettes, radius, space } from '@/theme';
+
+const palette = palettes.dawn;
 
 // The evening time is not in the API yet; setup will choose it later.
 const EVENING = '21:30';
@@ -59,11 +62,7 @@ export default function TodayScreen() {
         eyebrow={date}
         title="I dag"
         accessory={
-          <IconButton
-            icon="plus"
-            label={hasGoals ? 'Målene dine' : 'Legg til mål'}
-            onPress={() => router.push(hasGoals ? '/goals' : '/onboarding')}
-          />
+          <IconButton icon="plus" label="Legg til mål" onPress={() => router.push('/new-goal')} />
         }
       />
 
@@ -96,7 +95,7 @@ export default function TodayScreen() {
             </Voice>
           </View>
           <View style={styles.footer}>
-            <Button tone="dawn" label="Legg til ditt første mål" onPress={() => router.push('/onboarding')} />
+            <Button tone="dawn" label="Legg til ditt første mål" onPress={() => router.push('/new-goal')} />
           </View>
         </>
       )}
@@ -112,15 +111,21 @@ export default function TodayScreen() {
             stats={stats}
             onPress={state.today.reviewDone ? undefined : () => router.push('/review')}
           />
-          <Plan today={state.today} log={state.log} />
+          <Plan
+            today={state.today}
+            log={state.log}
+            onAdd={() => router.push('/new-goal')}
+            onAll={() => router.push('/goals')}
+          />
         </ScrollView>
       )}
     </Screen>
   );
 }
 
-function Plan({ today, log }: { today: Today; log: DailyLog | null }) {
-  const last = today.goals.length - 1;
+type PlanProps = { today: Today; log: DailyLog | null; onAdd: () => void; onAll: () => void };
+
+function Plan({ today, log, onAdd, onAll }: PlanProps) {
   return (
     <Group label="Dagens mål">
       {today.goals.map((goal, i) => {
@@ -132,15 +137,45 @@ function Plan({ today, log }: { today: Today; log: DailyLog | null }) {
             title={goal.title}
             detail={entry?.reason ?? undefined}
             trailing={goal.time ?? 'Hele dagen'}
-            last={i === last}
           />
         );
       })}
+      <Row
+        leading={<AddMark />}
+        title="Legg til mål"
+        trailing={<Icon name="chevron.right" color={palette.textMuted} size={13} />}
+        onPress={onAdd}
+      />
+      <Row
+        leading={<View style={styles.markSpace} />}
+        title="Alle mål og ukemål"
+        trailing={<Icon name="chevron.right" color={palette.textMuted} size={13} />}
+        onPress={onAll}
+        last
+      />
     </Group>
   );
 }
 
+// A small black circle with a plus, the same size as the status marks above it.
+function AddMark() {
+  return (
+    <View style={styles.addMark}>
+      <Icon name="plus" color={palette.actionText} size={12} />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  addMark: {
+    width: 22,
+    height: 22,
+    borderRadius: radius.pill,
+    backgroundColor: palette.action,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  markSpace: { width: 22 },
   scroll: { flex: 1, marginTop: 22 },
   content: { gap: 22, paddingBottom: space.lg },
   message: { marginTop: space.lg },

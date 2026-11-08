@@ -92,7 +92,7 @@ export default function GoalsScreen() {
 
         {state.kind === 'ready' && count === 0 && (
           <Voice tone="dawn" muted>
-            Ingen mål ennå. Fortell meg hva du vil få til.
+            Ingen mål ennå. Legg til det første, det tar ti sekunder.
           </Voice>
         )}
 
@@ -115,7 +115,7 @@ export default function GoalsScreen() {
         {state.kind === 'error' ? (
           <Button tone="dawn" label="Prøv igjen" onPress={retry} />
         ) : (
-          <Button tone="dawn" label="Legg til mål" onPress={() => router.push('/onboarding')} />
+          <Button tone="dawn" label="Legg til mål" onPress={() => router.push('/new-goal')} />
         )}
       </View>
     </Screen>
