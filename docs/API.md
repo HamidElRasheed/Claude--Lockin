@@ -150,3 +150,44 @@ type Stats = {
 };
 ```
 `rate` = snitt der gjort = 1, delvis = 0,5, ikke = 0. `null` = ingen data. Ingen streaks med vilje.
+
+---
+
+## Poengsystem (v1.1, 2026-11-08). Dagsscore 1–10, fornøydhet og ukemål med buffer
+
+**Dagsscore** = `round(1 + 9 × (0,6 × målandel + 0,4 × (fornøydhet − 1) / 9), 1)`, der målandel = snitt (gjort 1, delvis 0,5, ikke 0) og fornøydhet = 1–10. Uten fornøydhet: `round(1 + 9 × målandel, 1)`. Resultatet er alltid 1,0–10,0.
+
+### Endringer i eksisterende typer (alt nytt er valgfritt eller kan være null, så ingenting brekker)
+```ts
+// POST /review/complete: ny valgfri body-verdi
+{ date, entries, reflection, satisfaction?: number | null }   // heltall 1–10
+
+type DailyLog = {
+  ...                       // som før
+  satisfaction: number | null;   // 1–10
+  score: number | null;          // dagsscore 1–10, én desimal
+  suggestion: string | null;     // AI: ÉN konkret forslag til å endre et mål eller ukemålet, eller null
+};
+
+type WeeklyReport = {
+  ...                       // som før
+  scoreAverage: number | null;   // snitt av dagsscorene i uka, én desimal
+  daysAtTarget: number;          // dager med score ≥ targetScore
+  daysReviewed: number;
+  targetDays: number;            // fra innstillingene, f.eks. 5
+  targetScore: number;           // f.eks. 7
+  targetMet: boolean;            // daysAtTarget ≥ targetDays
+  dayScores: { date: string; score: number | null }[];  // 7 rader, man–søn
+};
+// /stats: days[] får `score: number | null`, og overall får `scoreAverage: number | null`.
+```
+
+### Nytt: ukemål med buffer
+| Metode | Sti | Body | Svar |
+|---|---|---|---|
+| GET | `/settings` | – | `Settings` |
+| PUT | `/settings` | `Settings` (deler av den) | `Settings` |
+```ts
+type Settings = { targetDays: number; targetScore: number };  // standard 5 og 7. targetDays 1–7, targetScore 1–10
+```
+Betydning: «Jeg vil ha minst `targetScore`/10 på `targetDays` av 7 dager.» Det er rom for å feile, uten streaks.
