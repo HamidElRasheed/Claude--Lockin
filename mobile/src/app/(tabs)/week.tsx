@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
@@ -46,9 +47,8 @@ export default function WeekScreen() {
     api.getLogs().then(setLogs, () => setLogs(null));
   }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  // Refetch on every visit, so a changed weekly target on Mål shows here at once.
+  useFocusEffect(fetchData);
 
   const retry = () => {
     setState({ kind: 'loading' });
