@@ -26,7 +26,7 @@ Eiere: **APP** = HamidElRasheed (`mobile/`, branch `app/arbeid`), **BACKEND** = 
 - [x] `/review/interpret` med Claude Haiku 5.5 og strukturert output (BACKEND). Testet live fra lyd til tekst til tolkning
 - [x] `/review/complete` med dagsrapport og «I morgen» (BACKEND). Hele gjennomgangen testet live på rundt 5 sekunder
 - [x] Opptaksknapp (hold for å snakke, med haptikk) (APP)
-- [ ] Kveldsgjennomgangen mot mock, deretter mot ekte API (APP)
+- [x] Kveldsgjennomgangen mot mock, deretter mot ekte API (APP)
 
 ## Fase 3: Logg, ukesrapport og oppsett (søndag morgen)
 - [x] `/logs` og `/reports/weekly` med generering (BACKEND)
@@ -40,8 +40,8 @@ Eiere: **APP** = HamidElRasheed (`mobile/`, branch `app/arbeid`), **BACKEND** = 
 - [x] Poengsystem i appen: fornøydhet 1–10 i kvelden, dagsscore i dagsrapporten, snitt og ukemål med buffer i ukesrapporten, ukemål på Mål-skjermen (APP, `app/poeng`, mock klar, ikke testet mot ekte backend ennå)
 
 ## Fase 4: Finpuss og levering (søndag kl. 10–14)
-- [ ] Gå gjennom alle tilstander: lasting, tom og feil (APP)
-- [ ] Oppdater README med «Kom i gang» (begge)
+- [x] Gå gjennom alle tilstander: lasting, tom og feil (APP)
+- [x] Oppdater README med «Kom i gang» (begge)
 - [ ] Demovideo som backup (begge)
 - [ ] Øv på pitchen, 2 min (begge)
 - [ ] `/lever` med repolenke og video (begge)
