@@ -28,6 +28,8 @@ const fallbackGlyph: Record<string, string> = {
   'mic.fill': '●',
   'waveform.path': '~',
   lightbulb: '!',
+  lock: '◉',
+  'hand.raised': '✋',
 };
 
 type Props = {

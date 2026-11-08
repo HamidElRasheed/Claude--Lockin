@@ -23,6 +23,8 @@ export const palettes = {
     heroText: '#FFFFFF',
     heroMuted: 'rgba(255,255,255,0.6)',
     heroTrack: 'rgba(255,255,255,0.18)',
+    // Dim layer behind a sheet.
+    scrim: 'rgba(17,17,17,0.45)',
   },
   dusk: {
     background: '#111111',
@@ -41,6 +43,7 @@ export const palettes = {
     heroText: '#111111',
     heroMuted: 'rgba(17,17,17,0.6)',
     heroTrack: 'rgba(17,17,17,0.15)',
+    scrim: 'rgba(0,0,0,0.6)',
   },
 } as const;
 
