@@ -30,4 +30,7 @@ def to_schema(log: models.DailyLog) -> schemas.DailyLog:
         reflection=log.reflection,
         summary=log.summary,
         tomorrow_tip=log.tomorrow_tip,
+        satisfaction=log.satisfaction,
+        score=log.score,
+        suggestion=log.suggestion,
     )

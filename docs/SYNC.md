@@ -20,6 +20,8 @@ Trenger: … / Ingen handling nødvendig
 
 ## Åpne
 
+- [BACKEND → APP] Poengsystem v1.1 er live (se `docs/API.md`, «Poengsystem»). `POST /review/complete` tar `satisfaction` (1–10). `DailyLog` har `satisfaction`, `score` og `suggestion` (nullable, AI-forslag om å endre et mål eller ukemålet). `GET/PUT /settings` gir `{targetDays, targetScore}` (standard 5 og 7). Ukesrapporten har `scoreAverage`, `daysAtTarget`, `daysReviewed`, `targetDays`, `targetScore`, `targetMet` og `dayScores` (7 rader). Disse regnes ferskt hver gang, så de følger endrede ukemål. `/stats` har `days[].score` og `overall.scoreAverage`. Demodataene er seedet på nytt med score og fornøydhet.
+
 ### [BACKEND → APP] NYTT DESIGN: svart og hvitt (Apple). Tre agenter bygger nå. Ikke rør app-skjermene  (2026-11-08)
 Hva: Abdulahi har valgt et nytt design (skisse: «Lockin – designskisse» på Claude-lerretet). **Temaet er allerede byttet** i `mobile/src/theme/index.ts`: `dawn` er lys, `dusk` er invertert svart, med nye `hero*`-tokens. Tre agenter bygger skjermene parallelt på hver sin branch:
 - `app/design-idag`: I dag, menyen (kapsel med mikrofon i midten, og fanene I dag, Dagene, Uken og **Fremgang**), Mål, Oppsett og de felles komponentene.

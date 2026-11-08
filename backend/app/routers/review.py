@@ -1,9 +1,10 @@
 import logging
+from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app import models
 from app.auth import current_user_id
@@ -17,7 +18,7 @@ from app.schemas import (
     InterpretRequest,
     Interpretation,
 )
-from app.services import ai, clock
+from app.services import ai, clock, score
 from app.services.logs import parse_date, to_schema
 
 log = logging.getLogger(__name__)
@@ -125,6 +126,8 @@ async def complete(
         daily = models.DailyLog(user_id=user_id, date=day)
         db.add(daily)
     daily.reflection = body.reflection
+    daily.satisfaction = body.satisfaction
+    daily.score = score.day_score([e.status for e in body.entries], body.satisfaction)
     daily.entries = [
         models.GoalEntry(
             goal_id=e.goal_id,
@@ -145,12 +148,58 @@ async def complete(
                 for e in body.entries
             ],
             body.reflection,
+            _context(db, user_id, day, body.satisfaction, daily.score),
         )
         daily.summary, daily.tomorrow_tip = result.summary, result.tomorrowTip
+        daily.suggestion = (result.suggestion or "").strip() or None
     except ai.AIError:
         log.warning("daily summary failed for %s; saved without it", day)
-        daily.summary, daily.tomorrow_tip = FALLBACK_SUMMARY, ""
+        daily.summary, daily.tomorrow_tip, daily.suggestion = FALLBACK_SUMMARY, "", None
 
     db.commit()
     db.refresh(daily)
     return to_schema(daily)
+
+
+def _context(db: Session, user_id: str, day, satisfaction: int | None, day_score: float | None) -> str:
+    """What the AI needs to suggest a change: the goals, the last 7 days per goal, the weekly target."""
+    settings = score.get_settings(db, user_id)
+    goals = list(
+        db.scalars(
+            select(models.Goal).where(models.Goal.user_id == user_id, models.Goal.active.is_(True))
+        )
+    )
+    recent = list(
+        db.scalars(
+            select(models.DailyLog)
+            .options(selectinload(models.DailyLog.entries))
+            .where(
+                models.DailyLog.user_id == user_id,
+                models.DailyLog.date < day,
+                models.DailyLog.date >= day - timedelta(days=7),
+            )
+        )
+    )
+    counts: dict[str, dict[str, int]] = {}
+    reasons: dict[str, list[str]] = {}
+    for past in recent:
+        for e in past.entries:
+            c = counts.setdefault(e.goal_title, {"done": 0, "partial": 0, "missed": 0})
+            c[e.status] = c.get(e.status, 0) + 1
+            if e.reason:
+                reasons.setdefault(e.goal_title, []).append(e.reason)
+    lines = [
+        f"Fornøydhet i dag: {satisfaction if satisfaction is not None else 'ikke oppgitt'}/10. "
+        f"Dagsscore: {day_score if day_score is not None else '-'}/10.",
+        f"Ukemål: minst {settings.target_score}/10 på {settings.target_days} av 7 dager.",
+        "Målene (siste 7 dager før i dag):",
+    ]
+    for g in goals:
+        c = counts.get(g.title, {"done": 0, "partial": 0, "missed": 0})
+        why = "; ".join(reasons.get(g.title, [])[:3])
+        target = f", {g.weekly_target} ganger i uka" if g.weekly_target else ""
+        lines.append(
+            f"- {g.title} (dager: {','.join(g.days)}{target}): gjort {c['done']}, delvis {c['partial']}, "
+            f"ikke {c['missed']}" + (f". Grunner: {why}" if why else "")
+        )
+    return "\n".join(lines)

@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app import models
 from app.schemas import Suggestion, SuggestionChange, WeeklyReport
+from app.services import score
 from app.services.ai import AIError, _parse
 from app.services.clock import WEEKDAYS
 
@@ -85,7 +86,12 @@ def build_input(db: Session, user_id: str, week: str) -> tuple[str, set[str]]:
 
     lines += ["", "Dager:"]
     for log in logs:
-        lines.append(f"{DAY_NAMES[log.date.weekday()]} {log.date.isoformat()} ({WEEKDAYS[log.date.weekday()]}):")
+        head = f"{DAY_NAMES[log.date.weekday()]} {log.date.isoformat()} ({WEEKDAYS[log.date.weekday()]})"
+        if log.score is not None:
+            head += f", dagsscore {log.score}/10"
+        if log.satisfaction is not None:
+            head += f", fornøydhet {log.satisfaction}/10"
+        lines.append(head + ":")
         for e in log.entries:
             line = f"  - {e.goal_title} (id={e.goal_id}): {STATUS_NAMES.get(e.status, e.status)}"
             if e.reason:
@@ -104,6 +110,14 @@ def build_input(db: Session, user_id: str, week: str) -> tuple[str, set[str]]:
             t[1] += 1
     lines += ["", "Totalt denne uka:"]
     lines += [f"- {title}: {done} av {count} gjort" for title, (done, count) in totals.items()]
+
+    summary = score.week_summary(db, user_id, monday)
+    lines += [
+        "",
+        f"Ukemål: minst {summary['target_score']}/10 på {summary['target_days']} av 7 dager. "
+        f"Nådd på {summary['days_at_target']} dager, snitt {summary['score_average'] or '-'}/10 "
+        f"({'nådd' if summary['target_met'] else 'ikke nådd'}).",
+    ]
 
     return "\n".join(lines), {g.id for g in goals}
 
@@ -160,7 +174,13 @@ def generate(db: Session, user_id: str, week: str) -> WeeklyReport:
     )
     db.add(models.WeeklyReport(user_id=user_id, week=week, content=report.model_dump(by_alias=True)))
     db.commit()
-    return report
+    return with_scores(db, user_id, report)
+
+
+def with_scores(db: Session, user_id: str, report: WeeklyReport) -> WeeklyReport:
+    """The score part is computed fresh from the logs every time, never taken from the stored AI text."""
+    monday, _ = week_bounds(report.week)
+    return WeeklyReport.model_validate({**report.model_dump(), **score.week_summary(db, user_id, monday)})
 
 
 def get_stored(db: Session, user_id: str, week: str) -> WeeklyReport | None:
@@ -169,4 +189,4 @@ def get_stored(db: Session, user_id: str, week: str) -> WeeklyReport | None:
         .where(models.WeeklyReport.user_id == user_id, models.WeeklyReport.week == week)
         .order_by(models.WeeklyReport.created_at.desc())
     )
-    return WeeklyReport.model_validate(row.content) if row else None
+    return with_scores(db, user_id, WeeklyReport.model_validate(row.content)) if row else None

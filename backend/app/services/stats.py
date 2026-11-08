@@ -79,10 +79,12 @@ def build(db: Session, user_id: str, weeks: int) -> dict:
                 **counts,
                 "total": total,
                 "rate": _rate([SCORE[k] for k, n in counts.items() for _ in range(n)]),
+                "score": log.score if log else None,
             }
         )
         d += timedelta(days=1)
 
+    day_scores = [x["score"] for x in days if x["score"] is not None]
     weekday_rates = {wd: _rate(per_weekday.get(wd, [])) for wd in clock.WEEKDAYS}
     rated = {wd: r for wd, r in weekday_rates.items() if r is not None}
 
@@ -93,6 +95,7 @@ def build(db: Session, user_id: str, weeks: int) -> dict:
         "overall": {
             "rate": _rate(all_scores),
             "reviews": len(logs),
+            "scoreAverage": round(sum(day_scores) / len(day_scores), 1) if day_scores else None,
             "days": (end - start).days + 1,
             "bestWeekday": max(rated, key=rated.get) if rated else None,
             "hardestWeekday": min(rated, key=rated.get) if rated else None,

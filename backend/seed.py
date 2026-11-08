@@ -9,7 +9,7 @@ from sqlalchemy import delete, select
 from app import models
 from app.config import settings
 from app.db import SessionLocal, init_db
-from app.services import clock
+from app.services import clock, score
 
 ALL_DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
@@ -120,6 +120,23 @@ def wipe(db, user_id: str) -> None:
     db.execute(delete(models.DailyLog).where(models.DailyLog.user_id == user_id))
     db.execute(delete(models.WeeklyReport).where(models.WeeklyReport.user_id == user_id))
     db.execute(delete(models.Goal).where(models.Goal.user_id == user_id))
+    db.execute(delete(models.UserSettings).where(models.UserSettings.user_id == user_id))
+
+
+# Satisfaction 1-10 follows how the day went, a bit lower on the long Wednesdays.
+def satisfaction_for(day: date, statuses: list[str]) -> int:
+    share = score.goal_share(statuses) or 0.0
+    base = 8 if share == 1 else 7 if share >= 0.75 else 5
+    if day.weekday() == 2:
+        base -= 1
+    if day.weekday() >= 5:
+        base += 1
+    return max(1, min(10, base))
+
+
+WEDNESDAY_SUGGESTION = (
+    "Trening har glippet onsdager fordi du jobber sent. Flytt onsdagsøkta til torsdag 07:00?"
+)
 
 
 # Two earlier weeks so the progress dashboard has a month of history. Same patterns
@@ -195,6 +212,11 @@ def run(user_id: str | None = None) -> dict[str, int]:
                     )
                 )
                 n_entries += 1
+            statuses = [e.status for e in log.entries]
+            log.satisfaction = satisfaction_for(day, statuses)
+            log.score = score.day_score(statuses, log.satisfaction)
+            if overrides.get("trene", ("done",))[0] == "missed":
+                log.suggestion = WEDNESDAY_SUGGESTION
             db.add(log)
             n_logs += 1
         db.commit()

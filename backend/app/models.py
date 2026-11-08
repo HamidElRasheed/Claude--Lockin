@@ -3,7 +3,7 @@
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import JSON, Boolean, Date, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import JSON, Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -35,6 +35,9 @@ class DailyLog(Base):
     reflection: Mapped[str | None] = mapped_column(Text)
     summary: Mapped[str] = mapped_column(Text, default="")
     tomorrow_tip: Mapped[str] = mapped_column(Text, default="")
+    satisfaction: Mapped[int | None] = mapped_column(Integer)  # 1-10, the user's own feeling
+    score: Mapped[float | None] = mapped_column(Float)  # day score 1-10 (see services/score.py)
+    suggestion: Mapped[str | None] = mapped_column(Text)  # AI: one change to a goal or the weekly target
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     entries: Mapped[list["GoalEntry"]] = relationship(
@@ -64,3 +67,13 @@ class WeeklyReport(Base):
     week: Mapped[str] = mapped_column(String(8), index=True)  # "2026-W45"
     content: Mapped[dict] = mapped_column(JSON)  # WeeklyReport schema as JSON
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class UserSettings(Base):
+    """Weekly target with a cushion: at least `target_score`/10 on `target_days` of 7 days."""
+
+    __tablename__ = "user_settings"
+
+    user_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    target_days: Mapped[int] = mapped_column(Integer, default=5)
+    target_score: Mapped[int] = mapped_column(Integer, default=7)

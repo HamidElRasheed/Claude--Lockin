@@ -13,7 +13,7 @@ MONDAY = date(2026, 11, 9)
 def client(monkeypatch):
     monkeypatch.setattr(clock, "today", lambda: MONDAY)
     monkeypatch.setattr(
-        ai, "daily_summary", lambda entries, reflection: ai.DailySummary(summary="s", tomorrowTip="t")
+        ai, "daily_summary", lambda entries, reflection, context="": ai.DailySummary(summary="s", tomorrowTip="t")
     )
     with TestClient(app) as c:
         yield c
@@ -43,7 +43,7 @@ def test_stats_rates_per_goal_weekday_and_day(client) -> None:
     assert goals["Lese"]["rate"] == 0.75
     assert len(s["days"]) == 7
     assert s["days"][-1] == {"date": "2026-11-09", "reviewed": True, "done": 1, "partial": 1,
-                             "missed": 0, "total": 2, "rate": 0.75}
+                             "missed": 0, "total": 2, "rate": 0.75, "score": 7.8}
     assert s["days"][0]["reviewed"] is False and s["days"][0]["rate"] is None
 
 

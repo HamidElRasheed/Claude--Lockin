@@ -103,9 +103,10 @@ def interpret_day(goals: list[tuple[str, str]], text: str) -> list[DayGoalResult
 class DailySummary(BaseModel):
     summary: str
     tomorrowTip: str  # noqa: N815
+    suggestion: str | None = None
 
 
-def daily_summary(entries: list[dict], reflection: str | None) -> DailySummary:
+def daily_summary(entries: list[dict], reflection: str | None, context: str = "") -> DailySummary:
     """entries: [{"goal": str, "status": str, "reason": str | None, "transcript": str | None}]"""
     lines = [
         f"- {e['goal']}: {e['status']}"
@@ -114,6 +115,8 @@ def daily_summary(entries: list[dict], reflection: str | None) -> DailySummary:
         for e in entries
     ]
     content = "Dagens mål:\n" + "\n".join(lines) + f"\n\nBrukerens oppsummering: {reflection or '(ingen)'}"
+    if context:
+        content += f"\n\nBakgrunn:\n{context}"
     return _parse("daily_summary", content, DailySummary, max_tokens=1024)
 
 

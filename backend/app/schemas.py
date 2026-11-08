@@ -87,10 +87,14 @@ class GoalEntry(ApiModel):
     transcript: str | None = None
 
 
+Satisfaction = Annotated[int, Field(ge=1, le=10)]
+
+
 class CompleteReviewRequest(ApiModel):
     date: str
     entries: list[GoalEntry]
     reflection: str | None = None
+    satisfaction: Satisfaction | None = None
 
 
 class DailyLog(ApiModel):
@@ -99,6 +103,24 @@ class DailyLog(ApiModel):
     reflection: str | None = None
     summary: str
     tomorrow_tip: str
+    satisfaction: int | None = None
+    score: float | None = None
+    suggestion: str | None = None
+
+
+class Settings(ApiModel):
+    target_days: Annotated[int, Field(ge=1, le=7)] = 5
+    target_score: Annotated[int, Field(ge=1, le=10)] = 7
+
+
+class SettingsUpdate(ApiModel):
+    target_days: Annotated[int, Field(ge=1, le=7)] | None = None
+    target_score: Annotated[int, Field(ge=1, le=10)] | None = None
+
+
+class DayScore(ApiModel):
+    date: str
+    score: float | None = None
 
 
 class SuggestionChange(ApiModel):
@@ -118,6 +140,14 @@ class WeeklyReport(ApiModel):
     went_well: list[str]
     patterns: list[str]
     suggestions: list[Suggestion]
+    # Computed from the logs (not AI) every time the report is served. Defaults keep old stored reports valid.
+    score_average: float | None = None
+    days_at_target: int = 0
+    days_reviewed: int = 0
+    target_days: int = 5
+    target_score: int = 7
+    target_met: bool = False
+    day_scores: list[DayScore] = []
 
 
 class GenerateWeeklyRequest(ApiModel):

@@ -10,7 +10,7 @@ def client(monkeypatch):
     monkeypatch.setattr(
         ai,
         "daily_summary",
-        lambda entries, reflection: ai.DailySummary(
+        lambda entries, reflection, context="": ai.DailySummary(
             summary="Travel dag, trening glapp.", tomorrowTip="Legg treningstøyet frem."
         ),
     )
@@ -54,7 +54,7 @@ def test_complete_twice_replaces_the_day(client) -> None:
 
 
 def test_ai_failure_still_saves_answers(client, monkeypatch) -> None:
-    def fail(entries, reflection):
+    def fail(entries, reflection, context=""):
         raise ai.AIError("ai_unavailable")
 
     monkeypatch.setattr(ai, "daily_summary", fail)

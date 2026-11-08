@@ -16,7 +16,7 @@ def client(monkeypatch):
     monkeypatch.setattr(
         ai,
         "daily_summary",
-        lambda entries, reflection: ai.DailySummary(summary="Rolig dag.", tomorrowTip="Legg deg tidlig."),
+        lambda entries, reflection, context="": ai.DailySummary(summary="Rolig dag.", tomorrowTip="Legg deg tidlig."),
     )
     with TestClient(app) as c:
         yield c

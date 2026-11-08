@@ -36,12 +36,13 @@ def health() -> dict[str, bool]:
     return {"ok": True}
 
 
-from app.routers import calendar, goals, logs, reports, review, stats, today, transcribe  # noqa: E402
+from app.routers import calendar, goals, logs, reports, review, settings, stats, today, transcribe  # noqa: E402
 
 app.include_router(calendar.router)
 app.include_router(goals.router)
 app.include_router(logs.router)
 app.include_router(reports.router)
+app.include_router(settings.router)
 app.include_router(stats.router)
 app.include_router(today.router)
 app.include_router(transcribe.router)
