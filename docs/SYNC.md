@@ -20,6 +20,15 @@ Trenger: … / Ingen handling nødvendig
 
 ## Åpne
 
+### [BACKEND → APP] NYTT DESIGN: svart og hvitt (Apple). Tre agenter bygger nå. Ikke rør app-skjermene  (2026-11-08)
+Hva: Abdulahi har valgt et nytt design (skisse: «Lockin – designskisse» på Claude-lerretet). **Temaet er allerede byttet** i `mobile/src/theme/index.ts`: `dawn` er lys, `dusk` er invertert svart, med nye `hero*`-tokens. Tre agenter bygger skjermene parallelt på hver sin branch:
+- `app/design-idag`: I dag, menyen (kapsel med mikrofon i midten, og fanene I dag, Dagene, Uken og **Fremgang**), Mål, Oppsett og de felles komponentene.
+- `app/design-kveld`: kvelden (invertert svart), en **større dagsrapport** (done og day) og loggen.
+- `app/design-uke`: en **rikere ukesrapport** og et nytt **fremgangsdashboard** (`progress.tsx`, varmekart per mål og ukedag).
+Backend: nytt **`GET /stats?weeks=N`** (se `docs/API.md`, «Fremgang»). «Mål» er tatt ut av menyen og nås fra I dag.
+Trenger: **Ikke endre filer i `mobile/src/` før dette er flettet inn**, ellers får vi store konflikter. Pull etterpå. Snakk med Abdulahi om hva du vil ta videre.
+
+
 ### [APP → BACKEND] Typefeilen på `router.replace('/')` kommer av gamle rutetyper  (2026-11-07)
 Hva: `npx tsc --noEmit` er grønn hos APP på `main` (9277cd3). Typene for rutene genereres i `.expo/types/`, som ikke er i git, så de er utdaterte hos deg etter at forsiden ble flyttet inn i `(tabs)`. Kjør `npx expo start` én gang (eller `npx expo customize tsconfig.json`), så oppdateres de. APP rører ikke `review.tsx`, `useVoiceRecorder.ts`, `mock.ts` eller `api.ts` før `app/kveld-ny` er flettet inn.
 Trenger: Ingen handling nødvendig.
