@@ -1,36 +1,46 @@
-// Design tokens for the "Pust" direction (see DECISIONS.md).
-// Never hardcode colors or sizes in components — import from here.
+// Design tokens. Never hardcode colors or sizes in components — import from here.
+// Direction (2026-11-08): BLACK AND WHITE ONLY, Apple HIG. Every grey is black or white
+// at lower opacity, so there is no third colour. Reference: the "Lockin – designskisse" canvas.
 
 // Two fixed moods, not a user-facing dark mode:
-// dawn = morning, week letter, setup. dusk = evening review.
+// dawn = light (morning, log, week, progress, setup). dusk = inverted black (evening review, done).
 export const palettes = {
   dawn: {
-    background: '#F4EDE4',
-    surface: '#FBF7F1',
-    text: '#2A2420',
-    textMuted: '#6E635A',
-    line: '#E3D9CC',
-    orb: '#F2B880',
-    orbGlow: 'rgba(242, 184, 128, 0.45)',
-    mark: '#C9733A',
-    action: '#B84A17',
-    actionText: '#FFF8F1',
-    tonal: '#EADFD0',
-    tonalText: '#2A2420',
+    background: '#F5F5F3',
+    surface: '#FFFFFF',
+    text: '#111111',
+    textMuted: 'rgba(17,17,17,0.55)',
+    line: 'rgba(17,17,17,0.10)',
+    orb: '#111111',
+    orbGlow: 'rgba(17,17,17,0.08)',
+    mark: '#111111',
+    action: '#111111',
+    actionText: '#FFFFFF',
+    tonal: 'rgba(17,17,17,0.06)',
+    tonalText: '#111111',
+    // Hero cards (big numbers) are inverted: black card, white text.
+    hero: '#111111',
+    heroText: '#FFFFFF',
+    heroMuted: 'rgba(255,255,255,0.6)',
+    heroTrack: 'rgba(255,255,255,0.18)',
   },
   dusk: {
-    background: '#161B2E',
-    surface: '#1E2440',
-    text: '#F1ECE4',
-    textMuted: '#A9A6B8',
-    line: '#3A4060',
-    orb: '#F2B880',
-    orbGlow: 'rgba(242, 184, 128, 0.5)',
-    mark: '#F2B880',
-    action: '#F2B880',
-    actionText: '#161B2E',
-    tonal: '#262D4B',
-    tonalText: '#F1ECE4',
+    background: '#111111',
+    surface: 'rgba(255,255,255,0.07)',
+    text: '#FFFFFF',
+    textMuted: 'rgba(255,255,255,0.55)',
+    line: 'rgba(255,255,255,0.12)',
+    orb: '#FFFFFF',
+    orbGlow: 'rgba(255,255,255,0.10)',
+    mark: '#FFFFFF',
+    action: '#FFFFFF',
+    actionText: '#111111',
+    tonal: 'rgba(255,255,255,0.12)',
+    tonalText: '#FFFFFF',
+    hero: '#FFFFFF',
+    heroText: '#111111',
+    heroMuted: 'rgba(17,17,17,0.6)',
+    heroTrack: 'rgba(17,17,17,0.15)',
   },
 } as const;
 
@@ -47,13 +57,13 @@ export const space = {
   xxxl: 72,
 } as const;
 
-// Crisp, near-square corners everywhere. Only true circles (orb, status dots) are round.
+// Soft iOS corners: grouped lists 16, cards 20–24, buttons and the tab bar are full pills.
 export const radius = {
-  sm: 2,
-  md: 2,
-  button: 2,
-  lg: 2,
-  pill: 2,
+  sm: 10,
+  md: 16,
+  button: 999,
+  lg: 24,
+  pill: 999,
 } as const;
 
 export const control = {

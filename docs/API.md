@@ -133,3 +133,20 @@ Feil på `/review/interpret-day`: `400 empty_text` og `502 interpretation_failed
 - `url`/`calendarUrl` er en «add event»-lenke til Google Kalender (`calendar.google.com/calendar/render?action=TEMPLATE…`). Appen åpner den, og Google Kalender viser hendelsen ferdig utfylt. Ingenting skrives til kalenderen før brukeren lagrer selv.
 - Mål med tidspunkt blir en hendelse på 30 minutter, mål uten tidspunkt en heldagshendelse. Startdato er neste av målets dager (fra og med i dag), og hendelsen gjentas ukentlig på målets dager.
 - `/suggestions/apply` er «Ja, gjør det» i ukesrapporten. `fromDay` + `toDay` bytter dagen, bare `toDay` legger til dagen, og `time` setter nytt tidspunkt. 404 `goal_not_found`. 422 `nothing_to_change` hvis verken `toDay` eller `time` er satt.
+
+### Fremgang (dashboard)
+`GET /stats?weeks=4` (1–26, standard 4) → ren telling uten AI, svarer umiddelbart:
+```ts
+type Stats = {
+  from: string; to: string;                    // datoer, siste `weeks` uker til og med i dag
+  overall: { rate: number | null; reviews: number; days: number;
+             bestWeekday: Weekday | null; hardestWeekday: Weekday | null };
+  weekdays: Record<Weekday, number | null>;    // snitt per ukedag, 0..1
+  weeks: { week: string; rate: number | null }[];
+  goals: { goalId: string; title: string; done: number; partial: number; missed: number;
+           rate: number | null; weekdays: Record<Weekday, number | null> }[];
+  days: { date: string; reviewed: boolean; done: number; partial: number; missed: number;
+          total: number; rate: number | null }[];  // én rad per dag, eldst først
+};
+```
+`rate` = snitt der gjort = 1, delvis = 0,5, ikke = 0. `null` = ingen data. Ingen streaks med vilje.
