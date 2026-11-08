@@ -7,6 +7,7 @@ import { Button } from '@/components/Button';
 import { IconButton } from '@/components/IconButton';
 import { MicButton, type MicState } from '@/components/MicButton';
 import { ReviewGoalRow } from '@/components/ReviewGoalRow';
+import { ScorePicker } from '@/components/ScorePicker';
 import { Screen } from '@/components/Screen';
 import { StatusChoices } from '@/components/StatusChoices';
 import { Voice } from '@/components/Voice';
@@ -38,6 +39,7 @@ type Stage =
   | 'askListening'
   | 'askThinking'
   | 'confirm'
+  | 'rate' // how satisfied the user is with the day, 1–10
   | 'saving';
 
 type Result = { status: GoalStatus | null; reason: string | null; transcript: string | null };
@@ -58,6 +60,7 @@ export default function ReviewScreen() {
   const [stagger, setStagger] = useState(false);
   const [dayText, setDayText] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [satisfaction, setSatisfaction] = useState<number | null>(null);
   const [micDenied, setMicDenied] = useState(false);
   const startedAt = useRef(0);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -213,7 +216,12 @@ export default function ReviewScreen() {
     });
   }
 
-  async function save() {
+  function askSatisfaction() {
+    setMessage(null);
+    setStage('rate');
+  }
+
+  async function save(rating: number | null) {
     setStage('saving');
     setMessage(null);
     const date = localDate(new Date());
@@ -225,12 +233,12 @@ export default function ReviewScreen() {
       transcript: results[g.id]?.transcript ?? null,
     }));
     try {
-      await api.completeReview(date, entries, dayText);
+      await api.completeReview(date, entries, dayText, rating);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace({ pathname: '/done', params: { date } });
     } catch {
       setMessage('Fikk ikke lagret kvelden. Prøv igjen.');
-      setStage('confirm');
+      setStage('rate');
     }
   }
 
@@ -263,7 +271,9 @@ export default function ReviewScreen() {
   const asking = stage === 'ask' || stage === 'askListening' || stage === 'askThinking';
   const showMic = canTalk && (stage === 'ready' || stage === 'failed' || stage === 'ask' || listening || thinking);
   const micState: MicState = listening ? 'listening' : thinking ? 'thinking' : 'idle';
-  const showList = goals.length > 0 && stage !== 'loading' && stage !== 'loadError' && stage !== 'empty';
+  const rating = stage === 'rate' || stage === 'saving';
+  const showList =
+    goals.length > 0 && !rating && stage !== 'loading' && stage !== 'loadError' && stage !== 'empty';
 
   return (
     <Screen tone="dusk">
@@ -281,7 +291,7 @@ export default function ReviewScreen() {
         <ScrollView style={styles.fill} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.heading}>
             <Voice tone="dusk">{headline(stage, micDenied && !isMock, askingMissing)}</Voice>
-            {dayText && <Text style={styles.said}>«{dayText}»</Text>}
+            {dayText && !rating && <Text style={styles.said}>«{dayText}»</Text>}
           </View>
 
           {showList && (
@@ -304,6 +314,12 @@ export default function ReviewScreen() {
                   />
                 );
               })}
+            </View>
+          )}
+
+          {rating && (
+            <View style={styles.rate}>
+              <ScorePicker value={satisfaction} onChange={setSatisfaction} />
             </View>
           )}
 
@@ -337,10 +353,35 @@ export default function ReviewScreen() {
             </View>
           )}
 
-          {(stage === 'confirm' || stage === 'saving') && (
+          {stage === 'confirm' && (
             <>
-              <Text style={styles.hint}>{message ?? 'Trykk på et mål for å endre.'}</Text>
-              <Button tone="dusk" label="Lagre kvelden" icon="moon.stars" loading={stage === 'saving'} onPress={save} />
+              <Text style={styles.hint}>Trykk på et mål for å endre.</Text>
+              <Button tone="dusk" label="Videre" icon="arrow.right" onPress={askSatisfaction} />
+            </>
+          )}
+
+          {rating && (
+            <>
+              {message && <Text style={styles.hint}>{message}</Text>}
+              <Button
+                tone="dusk"
+                label="Lagre kvelden"
+                icon="moon.stars"
+                disabled={satisfaction === null}
+                loading={stage === 'saving' && satisfaction !== null}
+                onPress={() => save(satisfaction)}
+              />
+              <Button
+                tone="dusk"
+                variant="text"
+                label="Hopp over"
+                disabled={stage === 'saving' && satisfaction !== null}
+                loading={stage === 'saving' && satisfaction === null}
+                onPress={() => {
+                  setSatisfaction(null);
+                  save(null);
+                }}
+              />
             </>
           )}
 
@@ -367,7 +408,8 @@ function headline(stage: Stage, micDenied: boolean, missing: boolean): string {
     failed: 'Fikk ikke med meg det.',
     revealing: 'Notert.',
     confirm: 'Slik ble dagen.',
-    saving: 'Slik ble dagen.',
+    rate: 'Hvor fornøyd er du med hvordan du gjorde det i dag?',
+    saving: 'Hvor fornøyd er du med hvordan du gjorde det i dag?',
   };
   return line[stage] ?? ' ';
 }
@@ -409,6 +451,7 @@ const styles = StyleSheet.create({
   askText: { ...type.body, color: palette.text, lineHeight: 24 },
   askHint: { ...type.caption, color: palette.textMuted },
   bold: { fontWeight: '700' },
+  rate: { paddingTop: space.md },
   bottom: { gap: space.md, paddingTop: space.sm },
   centered: { alignItems: 'center', gap: space.sm + space.xs },
   hint: { ...type.caption, color: palette.textMuted, textAlign: 'center' },

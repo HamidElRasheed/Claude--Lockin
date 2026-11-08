@@ -37,6 +37,7 @@ Eiere: **APP** = HamidElRasheed (`mobile/`, branch `app/arbeid`), **BACKEND** = 
 - [x] Skjermene for dagslogg og ukesrapport (APP)
 - [x] Oppsett med `/goals/parse` (APP og BACKEND)
 - [x] Morgenskjermen (APP)
+- [x] Poengsystem i appen: fornøydhet 1–10 i kvelden, dagsscore i dagsrapporten, snitt og ukemål med buffer i ukesrapporten, ukemål på Mål-skjermen (APP, `app/poeng`, mock klar, ikke testet mot ekte backend ennå)
 
 ## Fase 4: Finpuss og levering (søndag kl. 10–14)
 - [ ] Gå gjennom alle tilstander: lasting, tom og feil (APP)

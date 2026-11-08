@@ -16,6 +16,7 @@ const fallbackGlyph: Record<string, string> = {
   'sun.max': '○',
   target: '◎',
   plus: '+',
+  minus: '−',
   checkmark: '✓',
   house: '⌂',
   'house.fill': '⌂',

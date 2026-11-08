@@ -28,6 +28,9 @@ export type DailyLog = {
   reflection: string | null;
   summary: string;
   tomorrowTip: string;
+  satisfaction: number | null; // 1–10
+  score: number | null; // day score 1–10, one decimal
+  suggestion: string | null; // AI: one concrete change to a goal or the weekly target
 };
 
 export type Suggestion = {
@@ -41,6 +44,19 @@ export type WeeklyReport = {
   wentWell: string[];
   patterns: string[];
   suggestions: Suggestion[];
+  scoreAverage: number | null; // mean of the day scores, one decimal
+  daysAtTarget: number; // days with score >= targetScore
+  daysReviewed: number;
+  targetDays: number;
+  targetScore: number;
+  targetMet: boolean; // daysAtTarget >= targetDays
+  dayScores: { date: string; score: number | null }[]; // 7 rows, mon–sun
+};
+
+// GET/PUT /settings. "At least targetScore/10 on targetDays of 7 days." Defaults 5 and 7.
+export type Settings = {
+  targetDays: number; // 1–7
+  targetScore: number; // 1–10
 };
 
 export type Today = {
@@ -81,6 +97,7 @@ export type Stats = {
     days: number;
     bestWeekday: Weekday | null;
     hardestWeekday: Weekday | null;
+    scoreAverage: number | null;
   };
   weekdays: Record<Weekday, number | null>;
   weeks: { week: string; rate: number | null }[];
@@ -101,5 +118,6 @@ export type Stats = {
     missed: number;
     total: number;
     rate: number | null;
+    score: number | null;
   }[];
 };
