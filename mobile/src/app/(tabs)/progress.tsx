@@ -3,9 +3,11 @@ import { useCallback, useState, type ReactNode } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
+import { CircleView } from '@/components/CircleView';
 import { Heatmap } from '@/components/Heatmap';
 import { HeroCard } from '@/components/HeroCard';
 import { Screen } from '@/components/Screen';
+import { Segmented } from '@/components/Segmented';
 import { Voice } from '@/components/Voice';
 import { WeekBars, type Bar } from '@/components/WeekBars';
 import { api } from '@/lib/api';
@@ -22,6 +24,8 @@ type State = { kind: 'loading' } | { kind: 'error' } | { kind: 'ready'; stats: S
 // Progress over the last four weeks: plain counting, no AI. No streaks, nothing to break.
 export default function ProgressScreen() {
   const [state, setState] = useState<State>({ kind: 'loading' });
+  // "Meg" is your own four weeks; "Sirkelen" is the friend-circle demo (visual only).
+  const [mode, setMode] = useState<'me' | 'circle'>('me');
 
   const fetchData = useCallback(() => {
     api.getStats(WEEKS).then(
@@ -42,24 +46,36 @@ export default function ProgressScreen() {
     <Screen tone="dawn" inTabs>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.caption}>Siste {WEEKS} uker</Text>
+          <Text style={styles.caption}>{mode === 'me' ? `Siste ${WEEKS} uker` : 'Denne uka'}</Text>
           <Voice tone="dawn">Fremgang</Voice>
         </View>
 
-        {state.kind === 'loading' && (
+        <Segmented
+          options={[
+            { value: 'me', label: 'Meg' },
+            { value: 'circle', label: 'Sirkelen' },
+          ]}
+          value={mode}
+          onChange={setMode}
+        />
+
+        {mode === 'circle' && <CircleView />}
+
+        {mode === 'me' && state.kind === 'loading' && (
           <View style={styles.quiet}>
             <ActivityIndicator color={palette.textMuted} />
           </View>
         )}
 
-        {state.kind === 'error' && (
+        {mode === 'me' && state.kind === 'error' && (
           <View style={styles.quiet}>
             <Text style={styles.muted}>Fikk ikke hentet tallene dine.</Text>
             <Button tone="dawn" variant="tonal" label="Prøv igjen" onPress={retry} />
           </View>
         )}
 
-        {state.kind === 'ready' &&
+        {mode === 'me' &&
+          state.kind === 'ready' &&
           (state.stats.overall.rate === null ? (
             <Text style={styles.muted}>Ingen kvelder ennå. Etter noen gjennomganger ser du mønstrene dine her.</Text>
           ) : (
