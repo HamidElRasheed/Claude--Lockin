@@ -6,9 +6,11 @@ import { ChoicePills } from '@/components/ChoicePills';
 import { HeroCard } from '@/components/HeroCard';
 import { Screen } from '@/components/Screen';
 import { StatCard } from '@/components/StatCard';
+import { TargetDots } from '@/components/TargetDots';
 import { Voice } from '@/components/Voice';
 import { WeekBars, type Bar } from '@/components/WeekBars';
 import { ApiError, api } from '@/lib/api';
+import { formatScore } from '@/lib/days';
 import type { DailyLog, Stats, Suggestion, WeeklyReport } from '@/lib/types';
 import { formatRange, percent, weekDates, weekdayLetter, weekdayOf } from '@/lib/weekdays';
 import { isoWeek } from '@/lib/words';
@@ -92,18 +94,28 @@ type ReportProps = { report: WeeklyReport; dates: string[]; stats: Stats | null;
 function Report({ report, dates, stats, logs }: ReportProps) {
   const empty = report.patterns.length === 0 && report.wentWell.length === 0;
   const hero = stats ? weekHero(stats, dates) : null;
+  const scored = report.scoreAverage !== null && report.scoreAverage !== undefined;
   const cards = logs ? goalCards(logs, dates) : [];
 
-  if (empty && !hero) {
+  if (empty && !hero && !scored) {
     return <Text style={styles.muted}>Uka har så vidt begynt. Snakk med meg noen kvelder, så ser vi mønstrene sammen.</Text>;
   }
 
   return (
     <View style={styles.sections}>
-      {hero && (
-        <HeroCard value={percent(hero.rate)} label={`${hero.done} av ${hero.total} holdt`}>
-          <WeekBars bars={hero.bars} />
+      {scored ? (
+        <HeroCard value={formatScore(report.scoreAverage ?? 0)} label="/10 i snitt">
+          <View style={styles.target}>
+            <TargetDots days={report.dayScores} target={report.targetScore} />
+            <Text style={styles.targetText}>{targetLine(report)}</Text>
+          </View>
         </HeroCard>
+      ) : (
+        hero && (
+          <HeroCard value={percent(hero.rate)} label={`${hero.done} av ${hero.total} holdt`}>
+          <WeekBars bars={hero.bars} />
+          </HeroCard>
+        )
       )}
 
       {cards.length > 0 && (
@@ -220,6 +232,15 @@ function SuggestionCard({ suggestion }: { suggestion: Suggestion }) {
   );
 }
 
+// The weekly target with a buffer, said kindly: "5 av 7 dager på minst 7 · Ukemål nådd".
+function targetLine(report: WeeklyReport): string {
+  const { daysAtTarget, daysReviewed, targetDays, targetScore, targetMet } = report;
+  if (targetMet) return `${daysAtTarget} av ${daysReviewed} dager på minst ${targetScore} · Ukemål nådd`;
+  const left = targetDays - daysAtTarget;
+  const close = left === 1 ? 'Nesten' : 'Ny uke, nye muligheter';
+  return `${daysAtTarget} av ${targetDays} dager på minst ${targetScore} · ${close}`;
+}
+
 // One bar per day of the report week; the heaviest day gets the dashed ring.
 function weekHero(stats: Stats, dates: string[]) {
   const days = dates.map((date) => stats.days.find((d) => d.date === date) ?? null);
@@ -272,6 +293,8 @@ const styles = StyleSheet.create({
   quiet: { gap: space.md, alignItems: 'flex-start', paddingTop: space.sm },
   muted: { ...type.body, color: palette.textMuted },
   sections: { gap: space.lg },
+  target: { gap: space.md },
+  targetText: { ...type.body, ...type.strong, color: palette.heroText },
   cards: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm + 4 },
   section: { gap: space.sm + 4 },
   sectionLabel: { ...type.caption, ...type.strong, color: palette.textMuted },

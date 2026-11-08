@@ -31,6 +31,21 @@ export function dayScore(entries: GoalEntry[]): { points: number; total: number 
   return { points: entries.reduce((sum, e) => sum + points[e.status], 0), total: entries.length };
 }
 
+// The day score 1–10 from docs/API.md (v1.1): 60 % goals, 40 % satisfaction.
+// Without satisfaction it is the goals alone. Mirrors the backend so mock mode matches.
+export function computeScore(entries: GoalEntry[], satisfaction: number | null): number | null {
+  const { points: got, total } = dayScore(entries);
+  if (!total) return null;
+  const share = got / total;
+  const mix = satisfaction === null ? share : 0.6 * share + (0.4 * (satisfaction - 1)) / 9;
+  return Math.round((1 + 9 * mix) * 10) / 10;
+}
+
+// 7.4 -> "7,4", 7 -> "7,0". Scores always show one decimal.
+export function formatScore(value: number): string {
+  return value.toFixed(1).replace('.', ',');
+}
+
 // 2 -> "2", 2.5 -> "2,5"
 export function formatPoints(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(1).replace('.', ',');

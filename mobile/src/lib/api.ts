@@ -5,6 +5,7 @@ import { File } from 'expo-file-system';
 import {
   mockCompleteReview,
   mockCreateGoal,
+  mockGetSettings,
   mockGoals,
   mockInterpret,
   mockInterpretDay,
@@ -13,6 +14,7 @@ import {
   mockStats,
   mockToday,
   mockTranscribe,
+  mockUpdateSettings,
   mockWeeklyReport,
 } from './mock';
 import type {
@@ -23,6 +25,7 @@ import type {
   GoalDraft,
   GoalEntry,
   Interpretation,
+  Settings,
   Stats,
   Suggestion,
   Today,
@@ -67,7 +70,7 @@ function later<T>(value: T, ms = 900): Promise<T> {
   return new Promise((resolve) => setTimeout(() => resolve(value), ms));
 }
 
-function send(method: 'POST' | 'PATCH', body: unknown): RequestInit {
+function send(method: 'POST' | 'PATCH' | 'PUT', body: unknown): RequestInit {
   return {
     method,
     headers: { 'Content-Type': 'application/json' },
@@ -108,10 +111,16 @@ export const api = {
   interpret: (goalId: string, text: string): Promise<Interpretation> =>
     USE_MOCK ? later(mockInterpret(text), 600) : request('/review/interpret', send('POST', { goalId, text })),
 
-  completeReview: (date: string, entries: GoalEntry[], reflection: string | null): Promise<DailyLog> =>
+  // satisfaction: 1–10, or null when the user skipped the question.
+  completeReview: (
+    date: string,
+    entries: GoalEntry[],
+    reflection: string | null,
+    satisfaction: number | null,
+  ): Promise<DailyLog> =>
     USE_MOCK
-      ? later(mockCompleteReview(date, entries, reflection))
-      : request('/review/complete', send('POST', { date, entries, reflection })),
+      ? later(mockCompleteReview(date, entries, reflection, satisfaction))
+      : request('/review/complete', send('POST', { date, entries, reflection, satisfaction })),
 
   // Defaults to the last 30 days, newest first.
   getLogs: (): Promise<DailyLog[]> => (USE_MOCK ? Promise.resolve(mockLogs) : request('/logs')),
@@ -128,11 +137,15 @@ export const api = {
       ? later({ goal: mockGoals[0], calendarUrl: 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=Trene' }, 500)
       : request('/suggestions/apply', send('POST', { goalId, change })),
 
-  // Plain counts for the last `weeks` weeks, no AI. Answers immediately.
+  // The weekly target with a buffer: at least targetScore/10 on targetDays of 7 days.
+  getSettings: (): Promise<Settings> => (USE_MOCK ? later(mockGetSettings(), 200) : request('/settings')),
+
+  updateSettings: (changes: Partial<Settings>): Promise<Settings> =>
+    USE_MOCK ? later(mockUpdateSettings(changes), 200) : request('/settings', send('PUT', changes)),
 
   // Fetch the stored report; if none exists yet, ask the backend to write it (3–7 s).
   getWeeklyReport: async (week: string): Promise<WeeklyReport> => {
-    if (USE_MOCK) return later(mockWeeklyReport, 600);
+    if (USE_MOCK) return later(mockWeeklyReport(), 600);
     try {
       return await request<WeeklyReport>(`/reports/weekly?week=${week}`);
     } catch (error) {
