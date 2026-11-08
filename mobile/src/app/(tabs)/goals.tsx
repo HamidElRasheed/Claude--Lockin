@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Group, Row } from '@/components/Group';
+import { Icon } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
 import { LargeTitle } from '@/components/LargeTitle';
 import { Screen } from '@/components/Screen';
@@ -109,6 +110,15 @@ export default function GoalsScreen() {
             ))}
           </Group>
         )}
+        <Group label="Om appen">
+          <Row
+            title="Personvern og data"
+            detail="Lyden lagres aldri. Se hva vi lagrer."
+            trailing={<Icon name="chevron.right" color={palette.textMuted} size={13} />}
+            onPress={() => router.push('/privacy')}
+            last
+          />
+        </Group>
       </ScrollView>
 
       <View style={styles.footer}>
