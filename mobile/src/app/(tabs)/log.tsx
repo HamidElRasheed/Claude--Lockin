@@ -8,7 +8,7 @@ import { Screen } from '@/components/Screen';
 import { StatusMark } from '@/components/StatusMark';
 import { Voice } from '@/components/Voice';
 import { api } from '@/lib/api';
-import { capitalize, dateLabel, dayScore, formatPoints, weekdayName } from '@/lib/days';
+import { capitalize, dateLabel, dayScore, formatPoints, formatScore, weekdayName } from '@/lib/days';
 import type { DailyLog } from '@/lib/types';
 import { palettes, radius, space, type } from '@/theme';
 
@@ -77,26 +77,37 @@ export default function LogListScreen() {
 function LogRow({ log, last, onPress }: { log: DailyLog; last: boolean; onPress: () => void }) {
   const { points, total } = dayScore(log.entries);
   const day = capitalize(weekdayName(log.date));
-  const score = `${formatPoints(points)}/${total}`;
+  const hasScore = log.score !== null && log.score !== undefined;
+  const goals = `${formatPoints(points)} av ${total} mål`;
+  const spoken = hasScore ? `dagsscore ${formatScore(log.score ?? 0)} av 10, ${goals}` : goals;
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${day} ${dateLabel(log.date)}, ${formatPoints(points)} av ${total} mål`}
+      accessibilityLabel={`${day} ${dateLabel(log.date)}, ${spoken}`}
       onPress={onPress}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
       <View style={[styles.rowBody, !last && styles.separator]}>
         <View style={styles.when}>
           <Text style={styles.day}>{day}</Text>
-          <Text style={styles.date}>{dateLabel(log.date)}</Text>
+          <View style={styles.meta}>
+            <Text style={styles.date}>{dateLabel(log.date)}</Text>
+            <View style={styles.dots}>
+              {log.entries.map((e) => (
+                <StatusMark key={e.goalId} status={e.status} tone="dawn" />
+              ))}
+            </View>
+          </View>
         </View>
         <View style={styles.right}>
-          <View style={styles.dots}>
-            {log.entries.map((e) => (
-              <StatusMark key={e.goalId} status={e.status} tone="dawn" />
-            ))}
-          </View>
-          <Text style={styles.score}>{score}</Text>
+          {hasScore ? (
+            <View style={styles.scoreLine}>
+              <Text style={styles.score}>{formatScore(log.score ?? 0)}</Text>
+              <Text style={styles.scoreOf}>/10</Text>
+            </View>
+          ) : (
+            <Text style={styles.scoreOld}>{`${formatPoints(points)}/${total}`}</Text>
+          )}
           <Icon name="chevron.right" color={palette.textMuted} size={13} />
         </View>
       </View>
@@ -124,7 +135,11 @@ const styles = StyleSheet.create({
   when: { flex: 1, gap: 2 },
   day: { ...type.body, ...type.strong, color: palette.text },
   date: { ...type.caption, fontWeight: '400', color: palette.textMuted },
-  right: { flexDirection: 'row', alignItems: 'center', gap: space.md },
-  dots: { flexDirection: 'row', gap: space.xs + 1 },
-  score: { ...type.body, ...type.strong, color: palette.text, fontVariant: ['tabular-nums'], minWidth: space.xl + space.sm, textAlign: 'right' },
+  meta: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  right: { flexDirection: 'row', alignItems: 'center', gap: space.sm + 4 },
+  dots: { flexDirection: 'row', gap: space.xs },
+  scoreLine: { flexDirection: 'row', alignItems: 'baseline', gap: 1 },
+  score: { fontSize: 26, lineHeight: 30, fontWeight: '700', letterSpacing: -0.6, color: palette.text, fontVariant: ['tabular-nums'] },
+  scoreOf: { ...type.caption, ...type.strong, color: palette.textMuted },
+  scoreOld: { ...type.body, ...type.strong, color: palette.textMuted, fontVariant: ['tabular-nums'] },
 });
