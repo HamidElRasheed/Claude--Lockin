@@ -4,19 +4,19 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
-import { Icon } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
-import { Orb, type OrbMode } from '@/components/Orb';
+import { MicButton, type MicState } from '@/components/MicButton';
 import { ReviewGoalRow } from '@/components/ReviewGoalRow';
 import { Screen } from '@/components/Screen';
 import { StatusChoices } from '@/components/StatusChoices';
 import { Voice } from '@/components/Voice';
 import { api, isMock } from '@/lib/api';
+import { weekdayName } from '@/lib/days';
 import { deleteRecording } from '@/lib/deleteRecording';
 import type { Goal, GoalEntry, GoalStatus } from '@/lib/types';
 import { MicPermissionError, useVoiceRecorder } from '@/lib/useVoiceRecorder';
 import { localDate } from '@/lib/words';
-import { orb, palettes, radius, space, type } from '@/theme';
+import { palettes, radius, space, type } from '@/theme';
 
 const palette = palettes.dusk;
 // Time between two goals ticking off, and how long one tick takes to settle.
@@ -258,17 +258,12 @@ export default function ReviewScreen() {
 
   // --- View ----------------------------------------------------------------
 
-  const orbMode: OrbMode =
-    stage === 'listening' || stage === 'askListening'
-      ? 'listening'
-      : stage === 'thinking' || stage === 'askThinking' || stage === 'saving'
-        ? 'thinking'
-        : stage === 'confirm' || stage === 'revealing'
-          ? 'rest'
-          : 'idle';
-
-  const showList = goals.length > 0 && stage !== 'loading' && stage !== 'loadError' && stage !== 'empty';
+  const listening = stage === 'listening' || stage === 'askListening';
+  const thinking = stage === 'thinking' || stage === 'askThinking';
   const asking = stage === 'ask' || stage === 'askListening' || stage === 'askThinking';
+  const showMic = canTalk && (stage === 'ready' || stage === 'failed' || stage === 'ask' || listening || thinking);
+  const micState: MicState = listening ? 'listening' : thinking ? 'thinking' : 'idle';
+  const showList = goals.length > 0 && stage !== 'loading' && stage !== 'loadError' && stage !== 'empty';
 
   return (
     <Screen tone="dusk">
@@ -279,96 +274,67 @@ export default function ReviewScreen() {
         accessibilityHint={screenTap ? 'Trykk for å starte og stoppe opptaket' : undefined}
       >
         <View style={styles.top}>
-          <Text style={styles.caption}>I kveld</Text>
+          <Text style={styles.caption}>Kveld · {weekdayName(localDate(new Date()))}</Text>
           <IconButton tone="dusk" icon="xmark" label="Lukk kveldsgjennomgangen" onPress={close} />
         </View>
 
-        <View style={styles.question}>
-          <Headline
-            stage={stage}
-            micDenied={micDenied && !isMock}
-            asking={asking}
-            missing={askingMissing}
-            title={current?.title}
-          />
-        </View>
+        <ScrollView style={styles.fill} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <View style={styles.heading}>
+            <Voice tone="dusk">{headline(stage, micDenied && !isMock, askingMissing)}</Voice>
+            {dayText && <Text style={styles.said}>«{dayText}»</Text>}
+          </View>
 
-        {showList && (
-          <ScrollView style={styles.list} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
-            {goals.map((goal, i) => {
-              const result = results[goal.id];
-              const heardBefore = goals.slice(0, i).filter((g) => results[g.id]?.status).length;
-              return (
-                <ReviewGoalRow
-                  key={goal.id}
-                  title={goal.title}
-                  time={goal.time}
-                  status={result?.status ?? null}
-                  reason={result?.reason ?? null}
-                  delay={stagger ? heardBefore * STAGGER_MS : 0}
-                  dimmed={asking && goal.id !== current?.id}
-                  onPress={stage === 'confirm' ? () => cycle(goal.id) : undefined}
-                />
-              );
-            })}
-          </ScrollView>
-        )}
-
-        <View style={styles.center}>
-          <Pressable
-            disabled={!canTalk || !(screenTap || stage === 'ask')}
-            onPress={onOrbTap}
-            accessibilityRole="button"
-            accessibilityLabel={stage === 'listening' || stage === 'askListening' ? 'Stopp opptaket' : 'Start opptaket'}
-          >
-            <Orb tone="dusk" mode={orbMode} />
-          </Pressable>
-        </View>
-
-        <View style={styles.bottom}>
-          {stage === 'ready' && canTalk && (
-            <>
-              <View style={styles.chip} pointerEvents="none">
-                <Icon name="hand.tap" color={palette.orb} size={16} />
-                <Text style={styles.chipText}>Trykk på lyset og snakk</Text>
-              </View>
-              <View style={styles.centered}>
-                <Button tone="dusk" variant="text" label="Svar med knapper i stedet" onPress={answerManually} />
-              </View>
-            </>
-          )}
-
-          {stage === 'ready' && !canTalk && (
-            <>
-              <Text style={styles.hint}>Slå på mikrofonen for Lockin i Innstillinger, eller svar med knapper.</Text>
-              <Button tone="dusk" label="Svar med knapper" onPress={answerManually} />
-            </>
-          )}
-
-          {(stage === 'listening' || stage === 'askListening') && (
-            <View style={styles.centered}>
-              <Elapsed since={startedAt.current} />
-              <Text style={styles.hint}>Trykk når du er ferdig.</Text>
+          {showList && (
+            <View style={styles.group}>
+              {goals.map((goal, i) => {
+                const result = results[goal.id];
+                const heardBefore = goals.slice(0, i).filter((g) => results[g.id]?.status).length;
+                return (
+                  <ReviewGoalRow
+                    key={goal.id}
+                    title={goal.title}
+                    time={goal.time}
+                    status={result?.status ?? null}
+                    reason={result?.reason ?? null}
+                    pendingNote={dayText ? 'ikke nevnt' : null}
+                    delay={stagger ? heardBefore * STAGGER_MS : 0}
+                    dimmed={asking && goal.id !== current?.id}
+                    last={i === goals.length - 1}
+                    onPress={stage === 'confirm' ? () => cycle(goal.id) : undefined}
+                  />
+                );
+              })}
             </View>
           )}
 
-          {(stage === 'thinking' || stage === 'askThinking') && <Text style={styles.hint}>Et øyeblikk …</Text>}
+          {asking && current && (
+            <View style={styles.ask}>
+              <Text style={styles.askText}>
+                {askingMissing ? 'Du nevnte ikke ' : 'Hvordan gikk '}
+                <Text style={styles.bold}>{current.title}</Text>
+                {askingMissing ? '. Hvordan gikk det?' : '?'}
+              </Text>
+              {message && <Text style={styles.askHint}>{message}</Text>}
+              <StatusChoices onPick={(status) => answerCurrent(status, null, null)} />
+            </View>
+          )}
+        </ScrollView>
 
-          {stage === 'failed' && (
-            <>
-              {canTalk && <Button tone="dusk" label="Prøv igjen" onPress={() => startListening('listening')} />}
-              <View style={styles.centered}>
-                <Button tone="dusk" variant="text" label="Svar med knapper" onPress={answerManually} />
-              </View>
-            </>
+        <View style={styles.bottom}>
+          {showMic && (
+            <View style={styles.centered}>
+              <MicButton state={micState} onPress={onOrbTap} />
+              {listening ? <Elapsed since={startedAt.current} /> : <Text style={styles.hint}>{micHint(stage)}</Text>}
+            </View>
           )}
 
-          {stage === 'ask' && (
-            <>
-              {message && <Text style={styles.hint}>{message}</Text>}
-              <StatusChoices onPick={(status) => answerCurrent(status, null, null)} />
-              {canTalk && <Text style={styles.hint}>Eller trykk på lyset og svar kort.</Text>}
-            </>
+          {(stage === 'ready' || stage === 'failed') && (
+            <View style={styles.centered}>
+              {!canTalk && (
+                <Text style={styles.hint}>Slå på mikrofonen for Lockin i Innstillinger, eller svar med knapper.</Text>
+              )}
+              <Button tone="dusk" variant="text" label="Svar med knapper i stedet" onPress={answerManually} />
+            </View>
           )}
 
           {(stage === 'confirm' || stage === 'saving') && (
@@ -387,29 +353,9 @@ export default function ReviewScreen() {
 }
 
 // What the app says at the top. Short, calm, never an exclamation mark.
-function Headline({
-  stage,
-  micDenied,
-  asking,
-  missing,
-  title,
-}: {
-  stage: Stage;
-  micDenied: boolean;
-  asking: boolean;
-  missing: boolean;
-  title?: string;
-}) {
-  if (asking && title) {
-    return missing ? (
-      <Voice tone="dusk">
-        Du nevnte ikke <Text style={styles.italic}>{title}</Text>. Hvordan gikk det?
-      </Voice>
-    ) : (
-      <Voice tone="dusk">
-        Hvordan gikk <Text style={styles.italic}>{title}</Text>?
-      </Voice>
-    );
+function headline(stage: Stage, micDenied: boolean, missing: boolean): string {
+  if (stage === 'ask' || stage === 'askListening' || stage === 'askThinking') {
+    return missing ? 'Ett spørsmål til.' : 'Ett mål om gangen.';
   }
   const line: Partial<Record<Stage, string>> = {
     loading: ' ',
@@ -417,13 +363,21 @@ function Headline({
     empty: 'Ingen mål i dag. Sov godt.',
     ready: micDenied ? 'Mikrofonen er av.' : 'Fortell om dagen din.',
     listening: 'Fortell om dagen din.',
-    thinking: 'Et øyeblikk …',
+    thinking: 'Fortell om dagen din.',
     failed: 'Fikk ikke med meg det.',
     revealing: 'Notert.',
     confirm: 'Slik ble dagen.',
     saving: 'Slik ble dagen.',
   };
-  return <Voice tone="dusk">{line[stage] ?? ' '}</Voice>;
+  return line[stage] ?? ' ';
+}
+
+// The small line under the microphone.
+function micHint(stage: Stage): string {
+  if (stage === 'thinking' || stage === 'askThinking') return 'Et øyeblikk …';
+  if (stage === 'ask') return 'Trykk for å svare med stemmen';
+  if (stage === 'failed') return 'Trykk for å prøve igjen';
+  return 'Trykk og fortell';
 }
 
 // A quiet clock while the user talks.
@@ -436,9 +390,9 @@ function Elapsed({ since }: { since: number }) {
   const seconds = Math.max(0, Math.floor((now - since) / 1000));
   const clock = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
   return (
-    <View style={styles.chip} accessibilityLabel={`Lytter, ${seconds} sekunder`}>
+    <View style={styles.listeningRow} accessibilityLabel={`Lytter, ${seconds} sekunder`}>
       <View style={styles.dot} />
-      <Text style={styles.chipText}>Lytter … {clock}</Text>
+      <Text style={styles.listeningText}>Lytter … {clock} · trykk når du er ferdig</Text>
     </View>
   );
 }
@@ -446,25 +400,19 @@ function Elapsed({ since }: { since: number }) {
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  caption: { ...type.caption, color: palette.textMuted },
-  question: { marginTop: space.lg },
-  italic: { fontStyle: 'italic' },
-  list: { flexGrow: 0, marginTop: space.lg },
-  listContent: { gap: space.xs },
-  center: { flex: 1, minHeight: orb.size, alignItems: 'center', justifyContent: 'center' },
-  bottom: { minHeight: space.xxxl * 2, justifyContent: 'flex-end', gap: space.md },
-  centered: { alignItems: 'center', gap: space.sm },
+  caption: { ...type.caption, ...type.strong, color: palette.textMuted },
+  content: { gap: space.lg, paddingTop: space.lg, paddingBottom: space.lg },
+  heading: { gap: space.sm + 2 },
+  said: { ...type.body, color: palette.textMuted },
+  group: { backgroundColor: palette.surface, borderRadius: radius.md, overflow: 'hidden' },
+  ask: { backgroundColor: palette.tonal, borderRadius: radius.lg, padding: space.md + 2, gap: space.md - 2 },
+  askText: { ...type.body, color: palette.text, lineHeight: 24 },
+  askHint: { ...type.caption, color: palette.textMuted },
+  bold: { fontWeight: '700' },
+  bottom: { gap: space.md, paddingTop: space.sm },
+  centered: { alignItems: 'center', gap: space.sm + space.xs },
   hint: { ...type.caption, color: palette.textMuted, textAlign: 'center' },
-  chip: {
-    alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.sm,
-    paddingHorizontal: space.md,
-    paddingVertical: space.sm + 2,
-    borderRadius: radius.pill,
-    backgroundColor: palette.tonal,
-  },
-  chipText: { ...type.body, color: palette.text, fontWeight: '500', fontVariant: ['tabular-nums'] },
+  listeningRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: type.caption.lineHeight },
+  listeningText: { ...type.caption, color: palette.text, fontVariant: ['tabular-nums'] },
   dot: { width: space.sm, height: space.sm, borderRadius: radius.pill, backgroundColor: palette.orb },
 });

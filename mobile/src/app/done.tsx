@@ -1,71 +1,71 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
-import { Orb } from '@/components/Orb';
+import { DayReport } from '@/components/DayReport';
 import { Screen } from '@/components/Screen';
-import { StatusMark } from '@/components/StatusMark';
 import { Voice } from '@/components/Voice';
 import { api } from '@/lib/api';
-import type { DailyLog, GoalStatus } from '@/lib/types';
+import { weekdayName } from '@/lib/days';
+import type { DailyLog } from '@/lib/types';
 import { palettes, space, type } from '@/theme';
 
 const palette = palettes.dusk;
-const statusLabel: Record<GoalStatus, string> = { done: 'Gjort', partial: 'Delvis', missed: 'Ikke i dag' };
+const ENTER_MS = 900;
 
-// End of the evening: a quiet goodnight and the day at a glance. No judgement.
+type State = { kind: 'loading' } | { kind: 'missing' } | { kind: 'ready'; log: DailyLog };
+
+// Right after the evening: the day's report, then goodnight. No judgement.
 export default function DoneScreen() {
   const router = useRouter();
   const { date } = useLocalSearchParams<{ date: string }>();
-  const [log, setLog] = useState<DailyLog | null>(null);
+  const [state, setState] = useState<State>(() => (date ? { kind: 'loading' } : { kind: 'missing' }));
+  const [enter] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
-    if (date) api.getLog(date).then(setLog).catch(() => setLog(null));
+    if (!date) return;
+    api
+      .getLog(date)
+      .then((log) => setState({ kind: 'ready', log }))
+      .catch(() => setState({ kind: 'missing' }));
   }, [date]);
+
+  useEffect(() => {
+    if (state.kind === 'loading') return;
+    Animated.timing(enter, { toValue: 1, duration: ENTER_MS, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+  }, [enter, state.kind]);
+
+  const rise = enter.interpolate({ inputRange: [0, 1], outputRange: [space.lg, 0] });
 
   return (
     <Screen tone="dusk">
-      <View style={styles.orb}>
-        <Orb tone="dusk" mode="rest" size={260} />
-      </View>
-
-      <View style={styles.gap}>
-        <Voice tone="dusk">Det var alt for i dag.</Voice>
-        <Voice tone="dusk" muted>Sov godt.</Voice>
-      </View>
-
-      {log && (
-        <View style={styles.list}>
-          {log.entries.map((entry) => (
-            <View key={entry.goalId} style={styles.row}>
-              <StatusMark status={entry.status} />
-              <Text style={[styles.goal, entry.status === 'missed' && styles.muted]}>{entry.goalTitle}</Text>
-              <Text style={styles.caption}>{statusLabel[entry.status]}</Text>
-            </View>
-          ))}
-          <View style={styles.tomorrow}>
-            <Text style={styles.caption}>I morgen</Text>
-            <Text style={styles.goal}>{log.tomorrowTip}</Text>
-          </View>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <Text style={styles.caption}>{date ? `Kveld · ${weekdayName(date)}` : 'I kveld'}</Text>
+          <Voice tone="dusk">{state.kind === 'loading' ? 'Et øyeblikk …' : 'Sov godt.'}</Voice>
         </View>
-      )}
+
+        <Animated.View style={{ opacity: enter, transform: [{ translateY: rise }] }}>
+          {state.kind === 'ready' && <DayReport log={state.log} tone="dusk" />}
+          {state.kind === 'missing' && (
+            <Voice tone="dusk" muted>
+              Kvelden er lagret. Rapporten dukker opp i loggen.
+            </Voice>
+          )}
+        </Animated.View>
+      </ScrollView>
 
       <View style={styles.footer}>
-        <Button tone="dusk" variant="tonal" label="Til forsiden" onPress={() => router.replace('/')} />
+        <Button tone="dusk" label="Ferdig" onPress={() => router.replace('/')} />
       </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  orb: { position: 'absolute', bottom: -280, alignSelf: 'center' },
-  gap: { gap: space.md },
-  list: { marginTop: space.xxl, gap: space.md },
-  row: { flexDirection: 'row', alignItems: 'center', gap: space.md },
-  goal: { ...type.body, color: palette.text, flex: 1 },
-  muted: { color: palette.textMuted },
+  content: { gap: space.xl, paddingBottom: space.xl },
+  header: { gap: space.xs },
   caption: { ...type.caption, color: palette.textMuted },
-  tomorrow: { marginTop: space.lg, gap: space.xs },
-  footer: { marginTop: space.xl, alignItems: 'flex-start' },
+  footer: { paddingTop: space.md },
 });
