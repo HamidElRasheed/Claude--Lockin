@@ -33,6 +33,7 @@ export default function RootLayout() {
       <Stack.Screen name="onboarding" options={{ animation: 'slide_from_bottom' }} />
       <Stack.Screen name="new-goal" options={{ animation: 'slide_from_bottom' }} />
       <Stack.Screen name="privacy" options={{ animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="circle-invite" options={{ animation: 'slide_from_bottom' }} />
     </Stack>
       {showPrivacy && (
         <PrivacyCard
