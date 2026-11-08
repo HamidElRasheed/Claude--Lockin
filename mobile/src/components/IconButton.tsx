@@ -11,18 +11,19 @@ type Props = {
   tone?: Tone;
 };
 
-// Round 44 pt target for close/back/remove. Always has a spoken label.
+// Round 44 pt target for add/close/back/remove. White on the light mood, soft grey on the dark one.
 export function IconButton({ icon, label, onPress, tone = 'dawn' }: Props) {
   const palette = palettes[tone];
+  const background = tone === 'dawn' ? palette.surface : palette.tonal;
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
       hitSlop={8}
       onPress={onPress}
-      style={({ pressed }) => [styles.base, { backgroundColor: pressed ? palette.line : palette.tonal }]}
+      style={({ pressed }) => [styles.base, { backgroundColor: background }, pressed && styles.pressed]}
     >
-      <Icon name={icon} color={palette.tonalText} size={15} />
+      <Icon name={icon} color={palette.text} size={17} />
     </Pressable>
   );
 }
@@ -35,4 +36,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  pressed: { opacity: 0.6 },
 });

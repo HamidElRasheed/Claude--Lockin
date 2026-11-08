@@ -3,13 +3,14 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/Button';
+import { Group, Row } from '@/components/Group';
 import { IconButton } from '@/components/IconButton';
+import { LargeTitle } from '@/components/LargeTitle';
 import { Screen } from '@/components/Screen';
-import { Voice } from '@/components/Voice';
 import { ApiError, api } from '@/lib/api';
 import type { GoalDraft } from '@/lib/types';
 import { formatDays } from '@/lib/words';
-import { palettes, space, type } from '@/theme';
+import { palettes, radius, space, type } from '@/theme';
 
 const palette = palettes.dawn;
 
@@ -43,7 +44,7 @@ export default function OnboardingScreen() {
 
   function close() {
     if (router.canGoBack()) router.back();
-    else router.replace('/');
+    else router.replace('/(tabs)');
   }
 
   async function save() {
@@ -58,26 +59,32 @@ export default function OnboardingScreen() {
     }
   }
 
+  const writing = stage === 'write' || stage === 'parsing';
+
   return (
     <Screen tone="dawn">
       <View style={styles.top}>
         <IconButton icon="xmark" label="Lukk" onPress={close} />
       </View>
       <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        {(stage === 'write' || stage === 'parsing') && (
+        {writing ? (
           <>
-            <Voice tone="dawn">Hva vil du få til?</Voice>
-            <Text style={styles.caption}>Skriv det som du ville sagt det. For eksempel: trene tre ganger i uka om morgenen, og lese litt hver kveld.</Text>
-            <TextInput
-              style={styles.input}
-              value={text}
-              onChangeText={setText}
-              placeholder="Jeg vil …"
-              placeholderTextColor={palette.textMuted}
-              multiline
-              autoFocus
-              editable={stage === 'write'}
-            />
+            <LargeTitle eyebrow="Nye mål" title="Hva vil du få til?" />
+            <Text style={styles.hint}>
+              Skriv det som du ville sagt det. For eksempel: trene tre ganger i uka om morgenen, og lese litt hver kveld.
+            </Text>
+            <View style={styles.inputBox}>
+              <TextInput
+                style={styles.input}
+                value={text}
+                onChangeText={setText}
+                placeholder="Jeg vil …"
+                placeholderTextColor={palette.textMuted}
+                multiline
+                autoFocus
+                editable={stage === 'write'}
+              />
+            </View>
             {message && <Text style={styles.message}>{message}</Text>}
             <View style={styles.footer}>
               <Button
@@ -89,28 +96,31 @@ export default function OnboardingScreen() {
               />
             </View>
           </>
-        )}
-
-        {(stage === 'confirm' || stage === 'saving') && (
+        ) : (
           <>
-            <Voice tone="dawn">Ser dette riktig ut?</Voice>
-            <ScrollView style={styles.fill} contentContainerStyle={styles.cards} showsVerticalScrollIndicator={false}>
-              {drafts.map((draft, i) => (
-                <View key={`${draft.title}-${i}`} style={styles.card}>
-                  <View style={styles.cardText}>
-                    <Text style={styles.title}>{draft.title}</Text>
-                    <Text style={styles.caption}>
-                      {formatDays(draft.days)}
-                      {draft.time ? ` · kl. ${draft.time}` : ''}
-                    </Text>
-                  </View>
-                  <IconButton
-                    icon="xmark"
-                    label={`Fjern ${draft.title}`}
-                    onPress={() => setDrafts((prev) => prev.filter((_, j) => j !== i))}
-                  />
-                </View>
-              ))}
+            <LargeTitle eyebrow="Nye mål" title="Ser dette riktig ut?" />
+            <ScrollView style={styles.fill} contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+              {drafts.length > 0 ? (
+                <Group>
+                  {drafts.map((draft, i) => (
+                    <Row
+                      key={`${draft.title}-${i}`}
+                      title={draft.title}
+                      detail={`${formatDays(draft.days)}${draft.time ? ` · kl. ${draft.time}` : ''}`}
+                      trailing={
+                        <IconButton
+                          icon="xmark"
+                          label={`Fjern ${draft.title}`}
+                          onPress={() => setDrafts((prev) => prev.filter((_, j) => j !== i))}
+                        />
+                      }
+                      last={i === drafts.length - 1}
+                    />
+                  ))}
+                </Group>
+              ) : (
+                <Text style={styles.message}>Ingen mål igjen. Skriv på nytt for å prøve en gang til.</Text>
+              )}
             </ScrollView>
             {message && <Text style={styles.message}>{message}</Text>}
             <View style={styles.footer}>
@@ -135,30 +145,18 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   center: { alignItems: 'center' },
-  top: { alignItems: 'flex-end', marginTop: -space.xl, marginBottom: space.md },
-  caption: { ...type.caption, color: palette.textMuted, marginTop: space.sm },
+  top: { alignItems: 'flex-end', marginBottom: space.md },
+  hint: { ...type.body, fontSize: 15, lineHeight: 21, color: palette.textMuted, marginTop: space.sm },
+  inputBox: { marginTop: space.lg, backgroundColor: palette.surface, borderRadius: radius.md },
   input: {
     ...type.body,
     color: palette.text,
-    marginTop: space.xl,
-    minHeight: 120,
-    paddingVertical: space.md,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: palette.text,
+    minHeight: 140,
+    padding: space.md,
+    paddingTop: space.md,
     textAlignVertical: 'top',
   },
-  message: { ...type.body, color: palette.text, marginTop: space.md },
+  message: { ...type.body, color: palette.textMuted, marginTop: space.md },
   footer: { marginTop: 'auto', gap: space.sm, paddingTop: space.md },
-  cards: { paddingTop: space.xl },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: space.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: palette.line,
-    gap: space.md,
-  },
-  cardText: { flex: 1, gap: 2 },
-  title: { ...type.body, ...type.strong, color: palette.text },
+  list: { paddingTop: 22, paddingBottom: space.md },
 });

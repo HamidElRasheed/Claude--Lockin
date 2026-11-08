@@ -16,6 +16,15 @@ const fallbackGlyph: Record<string, string> = {
   'sun.max': '○',
   target: '◎',
   plus: '+',
+  checkmark: '✓',
+  house: '⌂',
+  'house.fill': '⌂',
+  'book.closed.fill': '≡',
+  'chart.bar': '▥',
+  'chart.bar.fill': '▥',
+  'chart.pie': '◔',
+  'chart.pie.fill': '◔',
+  'mic.fill': '●',
 };
 
 type Props = {

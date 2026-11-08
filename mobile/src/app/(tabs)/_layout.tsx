@@ -3,7 +3,8 @@ import { Tabs } from 'expo-router/js-tabs';
 import { TabBar } from '@/components/TabBar';
 import { palettes } from '@/theme';
 
-// The four places you move between. The evening review opens from the orb in the middle.
+// Four places in a floating capsule, the evening review on the black microphone in the middle.
+// "goals" is a tab screen without a tab: it opens from the button on "I dag".
 export default function TabsLayout() {
   return (
     <Tabs

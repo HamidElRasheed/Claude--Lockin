@@ -8,6 +8,7 @@ import type {
   GoalDraft,
   GoalEntry,
   Interpretation,
+  Stats,
   Today,
   WeeklyReport,
 } from './types';
@@ -111,3 +112,20 @@ export function mockCreateGoal(draft: GoalDraft): Goal {
   mockGoals.push(goal);
   return goal;
 }
+
+const noWeekdays = { mon: null, tue: null, wed: null, thu: null, fri: null, sat: null, sun: null };
+
+// Last week's counts, enough for the progress lines on "I dag".
+export const mockStats: Stats = {
+  from: '2026-11-01',
+  to: '2026-11-07',
+  overall: { rate: 0.71, reviews: 6, days: 7, bestWeekday: 'sat', hardestWeekday: 'wed' },
+  weekdays: { mon: 0.83, tue: 0.67, wed: 0.33, thu: 0.83, fri: 0.67, sat: 1, sun: null },
+  weeks: [{ week: '2026-W45', rate: 0.71 }],
+  goals: [
+    { goalId: 'g1', title: 'Trene', done: 2, partial: 0, missed: 1, rate: 0.67, weekdays: noWeekdays },
+    { goalId: 'g2', title: 'Lese 20 min', done: 4, partial: 2, missed: 0, rate: 0.83, weekdays: noWeekdays },
+    { goalId: 'g3', title: 'Ingen mobil etter 23', done: 3, partial: 0, missed: 2, rate: 0.6, weekdays: noWeekdays },
+  ],
+  days: [],
+};
