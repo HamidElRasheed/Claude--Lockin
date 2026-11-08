@@ -1,11 +1,10 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Group, Row } from '@/components/Group';
 import { Icon } from '@/components/Icon';
-import { IconButton } from '@/components/IconButton';
 import { LargeTitle } from '@/components/LargeTitle';
 import { Screen } from '@/components/Screen';
 import { StatusMark } from '@/components/StatusMark';
@@ -14,7 +13,7 @@ import { Voice } from '@/components/Voice';
 import { api } from '@/lib/api';
 import type { DailyLog, Stats, Today } from '@/lib/types';
 import { formatDay, localDate } from '@/lib/words';
-import { palettes, radius, space } from '@/theme';
+import { palettes, radius, space, type } from '@/theme';
 
 const palette = palettes.dawn;
 
@@ -62,7 +61,15 @@ export default function TodayScreen() {
         eyebrow={date}
         title="I dag"
         accessory={
-          <IconButton icon="plus" label="Legg til mål" onPress={() => router.push('/new-goal')} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Legg til mål"
+            onPress={() => router.push('/new-goal')}
+            style={({ pressed }) => [styles.addPill, pressed && styles.addPillPressed]}
+          >
+            <Icon name="plus" color={palette.actionText} size={14} />
+            <Text style={styles.addPillText}>Nytt mål</Text>
+          </Pressable>
         }
       />
 
@@ -167,6 +174,19 @@ function AddMark() {
 }
 
 const styles = StyleSheet.create({
+  // A labelled black pill instead of a bare +, so adding a goal is obvious at a glance.
+  addPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    height: 40,
+    paddingHorizontal: space.md,
+    borderRadius: radius.pill,
+    backgroundColor: palette.action,
+    marginBottom: 4,
+  },
+  addPillPressed: { opacity: 0.8 },
+  addPillText: { ...type.body, fontSize: 15, ...type.strong, color: palette.actionText },
   addMark: {
     width: 22,
     height: 22,
