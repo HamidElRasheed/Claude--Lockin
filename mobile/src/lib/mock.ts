@@ -10,8 +10,10 @@ import type {
   Interpretation,
   Stats,
   Today,
+  Weekday,
   WeeklyReport,
 } from './types';
+import { isoWeek, localDate } from './words';
 
 export const mockGoals: Goal[] = [
   { id: 'g1', title: 'Trene', days: ['mon', 'wed', 'fri'], time: '07:00', weeklyTarget: 3, active: true },
@@ -113,19 +115,102 @@ export function mockCreateGoal(draft: GoalDraft): Goal {
   return goal;
 }
 
-const noWeekdays = { mon: null, tue: null, wed: null, thu: null, fri: null, sat: null, sun: null };
+// A demo history for /stats, counted the same way as the backend (backend/app/services/stats.py).
+// Wednesdays are heavy on purpose, so the dashboard shows the same pattern as the weekly report.
+const statsToday = '2026-11-08';
+const weekdayKeys: Weekday[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+const score = { done: 1, partial: 0.5, missed: 0 } as const;
 
-// Last week's counts, enough for the progress lines on "I dag".
-export const mockStats: Stats = {
-  from: '2026-11-01',
-  to: '2026-11-07',
-  overall: { rate: 0.71, reviews: 6, days: 7, bestWeekday: 'sat', hardestWeekday: 'wed' },
-  weekdays: { mon: 0.83, tue: 0.67, wed: 0.33, thu: 0.83, fri: 0.67, sat: 1, sun: null },
-  weeks: [{ week: '2026-W45', rate: 0.71 }],
-  goals: [
-    { goalId: 'g1', title: 'Trene', done: 2, partial: 0, missed: 1, rate: 0.67, weekdays: noWeekdays },
-    { goalId: 'g2', title: 'Lese 20 min', done: 4, partial: 2, missed: 0, rate: 0.83, weekdays: noWeekdays },
-    { goalId: 'g3', title: 'Ingen mobil etter 23', done: 3, partial: 0, missed: 2, rate: 0.6, weekdays: noWeekdays },
-  ],
-  days: [],
-};
+function mockStatus(goalId: string, weekday: Weekday, week: number): GoalEntry['status'] {
+  if (goalId === 'g1') {
+    if (weekday === 'wed') return week % 3 === 0 ? 'partial' : 'missed';
+    return weekday === 'fri' && week % 2 === 1 ? 'partial' : 'done';
+  }
+  if (goalId === 'g2') {
+    if (weekday === 'wed' || weekday === 'sat') return 'partial';
+    return weekday === 'thu' && week % 3 === 1 ? 'missed' : 'done';
+  }
+  if (weekday === 'wed') return week % 2 === 0 ? 'missed' : 'partial';
+  return weekday === 'sun' ? 'partial' : 'done';
+}
+
+function mean(values: number[]): number | null {
+  return values.length ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 1000) / 1000 : null;
+}
+
+function byWeekday(scores: Partial<Record<Weekday, number[]>>): Record<Weekday, number | null> {
+  return Object.fromEntries(weekdayKeys.map((wd) => [wd, mean(scores[wd] ?? [])])) as Record<Weekday, number | null>;
+}
+
+export function mockStats(weeks: number): Stats {
+  const [y, m, d] = statsToday.split('-').map(Number);
+  const end = new Date(y, m - 1, d);
+  const start = new Date(y, m - 1, d - (7 * weeks - 1));
+  const all: number[] = [];
+  const perWeekday: Partial<Record<Weekday, number[]>> = {};
+  const perWeek: Record<string, number[]> = {};
+  const perGoal = mockGoals.map((goal) => ({
+    goal,
+    counts: { done: 0, partial: 0, missed: 0 },
+    scores: [] as number[],
+    weekdays: {} as Partial<Record<Weekday, number[]>>,
+  }));
+  const days: Stats['days'] = [];
+  let reviews = 0;
+
+  for (let i = 0; i < 7 * weeks; i += 1) {
+    const date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+    const weekday = weekdayKeys[(date.getDay() + 6) % 7];
+    const week = isoWeek(date);
+    const reviewed = date.getTime() < end.getTime(); // tonight's review is still ahead
+    const counts = { done: 0, partial: 0, missed: 0 };
+    const dayScores: number[] = [];
+    if (reviewed) {
+      reviews += 1;
+      for (const g of perGoal) {
+        if (!g.goal.days.includes(weekday)) continue;
+        const status = mockStatus(g.goal.id, weekday, Number(week.split('W')[1]));
+        const s = score[status];
+        counts[status] += 1;
+        g.counts[status] += 1;
+        g.scores.push(s);
+        (g.weekdays[weekday] ??= []).push(s);
+        (perWeekday[weekday] ??= []).push(s);
+        (perWeek[week] ??= []).push(s);
+        dayScores.push(s);
+        all.push(s);
+      }
+    }
+    perWeek[week] ??= [];
+    days.push({ date: localDate(date), reviewed, ...counts, total: dayScores.length, rate: mean(dayScores) });
+  }
+
+  const weekdays = byWeekday(perWeekday);
+  const rated = weekdayKeys.filter((wd) => weekdays[wd] !== null);
+  const pick = (better: (a: number, b: number) => boolean) =>
+    rated.reduce<Weekday | null>((best, wd) => (best === null || better(weekdays[wd] ?? 0, weekdays[best] ?? 0) ? wd : best), null);
+
+  return {
+    from: localDate(start),
+    to: localDate(end),
+    overall: {
+      rate: mean(all),
+      reviews,
+      days: 7 * weeks,
+      bestWeekday: pick((a, b) => a > b),
+      hardestWeekday: pick((a, b) => a < b),
+    },
+    weekdays,
+    weeks: Object.keys(perWeek)
+      .sort()
+      .map((week) => ({ week, rate: mean(perWeek[week]) })),
+    goals: perGoal.map((g) => ({
+      goalId: g.goal.id,
+      title: g.goal.title,
+      ...g.counts,
+      rate: mean(g.scores),
+      weekdays: byWeekday(g.weekdays),
+    })),
+    days,
+  };
+}

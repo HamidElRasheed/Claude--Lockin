@@ -129,8 +129,6 @@ export const api = {
       : request('/suggestions/apply', send('POST', { goalId, change })),
 
   // Plain counts for the last `weeks` weeks, no AI. Answers immediately.
-  getStats: (weeks: number): Promise<Stats> =>
-    USE_MOCK ? later(mockStats, 300) : request(`/stats?weeks=${weeks}`),
 
   // Fetch the stored report; if none exists yet, ask the backend to write it (3–7 s).
   getWeeklyReport: async (week: string): Promise<WeeklyReport> => {
@@ -144,4 +142,8 @@ export const api = {
       throw error;
     }
   },
+
+  // Progress dashboard: plain counting over the last `weeks` weeks up to today. Instant.
+  getStats: (weeks = 4): Promise<Stats> =>
+    USE_MOCK ? later(mockStats(weeks), 300) : request(`/stats?weeks=${weeks}`),
 };

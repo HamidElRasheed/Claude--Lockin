@@ -71,6 +71,7 @@ export type ApplySuggestionResult = {
   calendarUrl: string;
 };
 
+// GET /stats?weeks=N. rate = mean score (done 1, partial 0.5, missed 0), null = no data.
 export type Stats = {
   from: string;
   to: string;
