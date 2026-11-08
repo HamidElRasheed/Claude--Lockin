@@ -26,6 +26,8 @@ const fallbackGlyph: Record<string, string> = {
   'chart.pie': '◔',
   'chart.pie.fill': '◔',
   'mic.fill': '●',
+  'waveform.path': '~',
+  lightbulb: '!',
 };
 
 type Props = {

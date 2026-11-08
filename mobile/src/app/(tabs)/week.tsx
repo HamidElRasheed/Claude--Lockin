@@ -4,7 +4,9 @@ import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, View } from '
 
 import { Button } from '@/components/Button';
 import { ChoicePills } from '@/components/ChoicePills';
+import { DayScores } from '@/components/DayScores';
 import { HeroCard } from '@/components/HeroCard';
+import { Icon } from '@/components/Icon';
 import { Screen } from '@/components/Screen';
 import { StatCard } from '@/components/StatCard';
 import { TargetDots } from '@/components/TargetDots';
@@ -118,6 +120,10 @@ function Report({ report, dates, stats, logs }: ReportProps) {
         )
       )}
 
+      {report.dayScores?.some((d) => d.score !== null) && (
+        <DayScores days={report.dayScores} target={report.targetScore} />
+      )}
+
       {cards.length > 0 && (
         <View style={styles.cards}>
           {cards.map((c) => (
@@ -126,24 +132,19 @@ function Report({ report, dates, stats, logs }: ReportProps) {
         </View>
       )}
 
-      {report.patterns.length > 0 && (
-        <Section label="Mønster">
+      {(report.patterns.length > 0 || report.wentWell.length > 0) && (
+        <Section label="Hva uka viste">
           {report.patterns.map((p, i) => (
-            <Paragraph key={`p${i}`} text={p} />
+            <Insight key={`p${i}`} kind="pattern" text={p} />
           ))}
-        </Section>
-      )}
-
-      {report.wentWell.length > 0 && (
-        <Section label="Det som holdt">
           {report.wentWell.map((w, i) => (
-            <Paragraph key={`w${i}`} text={w} />
+            <Insight key={`w${i}`} kind="good" text={w} />
           ))}
         </Section>
       )}
 
       {report.suggestions.length > 0 && (
-        <Section label={report.suggestions.length === 1 ? 'Forslag' : 'Forslag til neste uke'}>
+        <Section label="Forslag til neste uke">
           {report.suggestions.map((s, i) => (
             <SuggestionCard key={`s${i}`} suggestion={s} />
           ))}
@@ -164,14 +165,26 @@ function Section({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-// The first sentence carries the point, so it is bold; the rest explains it.
-function Paragraph({ text }: { text: string }) {
+const insightKinds = {
+  pattern: { label: 'Mønster', icon: 'waveform.path' as const },
+  good: { label: 'Det som holdt', icon: 'checkmark' as const },
+};
+
+// One point per white box: a small label, the point in bold, then the explanation in grey.
+function Insight({ kind, text }: { kind: keyof typeof insightKinds; text: string }) {
+  const meta = insightKinds[kind];
   const match = /^(.+?[.!?])\s+([\s\S]+)$/.exec(text.trim());
   return (
-    <Text style={styles.paragraph}>
-      <Text style={styles.strong}>{match ? match[1] : text}</Text>
-      {match ? ` ${match[2]}` : null}
-    </Text>
+    <View style={styles.card} accessible accessibilityLabel={`${meta.label}. ${text}`}>
+      <View style={styles.cardHead}>
+        <View style={styles.badge}>
+          <Icon name={meta.icon} color={palette.text} size={12} />
+        </View>
+        <Text style={styles.cardLabel}>{meta.label}</Text>
+      </View>
+      <Text style={styles.cardText}>{match ? match[1] : text}</Text>
+      {match ? <Text style={styles.cardBody}>{match[2]}</Text> : null}
+    </View>
   );
 }
 
@@ -196,6 +209,12 @@ function SuggestionCard({ suggestion }: { suggestion: Suggestion }) {
 
   return (
     <View style={styles.card}>
+      <View style={styles.cardHead}>
+        <View style={styles.badge}>
+          <Icon name="lightbulb" color={palette.text} size={12} />
+        </View>
+        <Text style={styles.cardLabel}>Forslag</Text>
+      </View>
       <Text style={styles.cardText}>{suggestion.text}</Text>
 
       {(answer.kind === 'open' || answer.kind === 'saving' || answer.kind === 'error') && (
@@ -298,9 +317,18 @@ const styles = StyleSheet.create({
   cards: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm + 4 },
   section: { gap: space.sm + 4 },
   sectionLabel: { ...type.caption, ...type.strong, color: palette.textMuted },
-  paragraph: { ...type.body, lineHeight: 24, color: palette.text },
-  strong: { fontWeight: '700' },
-  card: { backgroundColor: palette.surface, borderRadius: radius.lg - 4, padding: space.md + 2, gap: space.md - 2 },
-  cardText: { ...type.body, lineHeight: 24, ...type.strong, color: palette.text },
+  card: { backgroundColor: palette.surface, borderRadius: radius.lg - 4, padding: space.md + 2, gap: space.sm },
+  cardHead: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginBottom: 2 },
+  badge: {
+    width: 22,
+    height: 22,
+    borderRadius: radius.pill,
+    backgroundColor: palette.tonal,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardLabel: { ...type.caption, ...type.strong, color: palette.textMuted },
+  cardText: { ...type.body, lineHeight: 23, fontWeight: '700', color: palette.text },
+  cardBody: { ...type.body, lineHeight: 23, color: palette.textMuted },
   note: { ...type.body, color: palette.textMuted },
 });
