@@ -4,6 +4,18 @@ En mobilapp for daglige mål der du **prater deg gjennom dagen på under to minu
 
 Laget på **Oslo Sprint, 6.–8. november 2026**, av HamidElRasheed (app) og abala-108 (backend).
 
+## Skjermbilder
+
+| I dag | Nytt mål | Dagene |
+|---|---|---|
+| <img src="docs/screenshots/1-i-dag.png" width="240" alt="I dag: dagens mål og knappen Nytt mål"> | <img src="docs/screenshots/2-nytt-maal.png" width="240" alt="Legg til et mål på et par trykk"> | <img src="docs/screenshots/3-dagene.png" width="240" alt="Dagene med dagspoeng 1–10"> |
+
+| Uka di | Sirkelen (forhåndsvisning) | Personvern |
+|---|---|---|
+| <img src="docs/screenshots/4-uka-di.png" width="240" alt="Ukesrapport med dagspoeng, mønstre og forslag"> | <img src="docs/screenshots/5-sirkelen.jpg" width="240" alt="Vennesirkel med ukens duell og toppliste"> | <img src="docs/screenshots/6-personvern.png" width="240" alt="Kort om dataene dine første gang appen åpnes"> |
+
+Skjermbildene er tatt med demodata. Kveldsgjennomgangen, der du snakker om dagen, vises live i demoen.
+
 ## Problemet
 
 Vaneapper registrerer *om* du gjorde noe. De krever mye oppsett, streaks straffer én dårlig dag, og etter noen uker gir de fleste opp. Det som faktisk hjelper deg å endre noe, er å forstå *hvorfor* det ikke ble gjort, og det skriver ingen ned.
