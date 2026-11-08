@@ -13,6 +13,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="index" />
       <Tabs.Screen name="log" />
       <Tabs.Screen name="week" />
+      <Tabs.Screen name="progress" />
       <Tabs.Screen name="goals" />
     </Tabs>
   );

@@ -13,7 +13,8 @@ const tabs: Record<string, { label: string; icon: SFSymbol }> = {
   index: { label: 'I dag', icon: 'sun.max' },
   log: { label: 'Dagene', icon: 'book.closed' },
   week: { label: 'Uken', icon: 'chart.line.uptrend.xyaxis' },
-  goals: { label: 'Mål', icon: 'target' },
+  // "Mål" is reached from the I dag screen; the bar shows the four places plus the evening orb.
+  progress: { label: 'Fremgang', icon: 'chart.bar' },
 };
 
 // Bottom menu: four calm tabs and, in the middle, the evening review as a small glowing orb.
