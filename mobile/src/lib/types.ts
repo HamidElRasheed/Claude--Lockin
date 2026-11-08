@@ -70,3 +70,36 @@ export type ApplySuggestionResult = {
   goal: Goal;
   calendarUrl: string;
 };
+
+// GET /stats?weeks=N. rate = mean score (done 1, partial 0.5, missed 0), null = no data.
+export type Stats = {
+  from: string;
+  to: string;
+  overall: {
+    rate: number | null;
+    reviews: number;
+    days: number;
+    bestWeekday: Weekday | null;
+    hardestWeekday: Weekday | null;
+  };
+  weekdays: Record<Weekday, number | null>;
+  weeks: { week: string; rate: number | null }[];
+  goals: {
+    goalId: string;
+    title: string;
+    done: number;
+    partial: number;
+    missed: number;
+    rate: number | null;
+    weekdays: Record<Weekday, number | null>;
+  }[];
+  days: {
+    date: string;
+    reviewed: boolean;
+    done: number;
+    partial: number;
+    missed: number;
+    total: number;
+    rate: number | null;
+  }[];
+};

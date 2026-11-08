@@ -1,28 +1,36 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
+import { ChoicePills } from '@/components/ChoicePills';
+import { HeroCard } from '@/components/HeroCard';
 import { Screen } from '@/components/Screen';
+import { StatCard } from '@/components/StatCard';
 import { Voice } from '@/components/Voice';
+import { WeekBars, type Bar } from '@/components/WeekBars';
 import { ApiError, api } from '@/lib/api';
-import type { WeeklyReport } from '@/lib/types';
+import type { DailyLog, Stats, Suggestion, WeeklyReport } from '@/lib/types';
+import { formatRange, percent, weekDates, weekdayLetter, weekdayOf } from '@/lib/weekdays';
 import { isoWeek } from '@/lib/words';
-import { palettes, space, type } from '@/theme';
+import { palettes, radius, space, type } from '@/theme';
 
 const palette = palettes.dawn;
 
 type State = { kind: 'loading' } | { kind: 'error' } | { kind: 'empty' } | { kind: 'ready'; report: WeeklyReport };
 
-// The letter covers last week, which is complete (backend suggestion in SYNC.md).
+// The report covers last week, which is complete (backend suggestion in SYNC.md).
 function lastWeek(): string {
   const d = new Date();
   d.setDate(d.getDate() - 7);
   return isoWeek(d);
 }
 
-// The weekly report reads like a short letter: what happened, why, and one concrete offer.
+// The weekly report: the week in one number, the goals in small cards, then why, then one offer.
 export default function WeekScreen() {
   const [state, setState] = useState<State>({ kind: 'loading' });
+  // Numbers are a bonus on top of the letter: if they fail, the letter still shows.
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [logs, setLogs] = useState<DailyLog[] | null>(null);
 
   const fetchData = useCallback(() => {
     api
@@ -31,6 +39,9 @@ export default function WeekScreen() {
       .catch((error) =>
         setState(error instanceof ApiError && error.code === 'no_logs_for_week' ? { kind: 'empty' } : { kind: 'error' }),
       );
+    // Two weeks of stats always contain all of last week, whatever today is.
+    api.getStats(2).then(setStats, () => setStats(null));
+    api.getLogs().then(setLogs, () => setLogs(null));
   }, []);
 
   useEffect(() => {
@@ -42,43 +53,123 @@ export default function WeekScreen() {
     fetchData();
   };
 
-  const weekNumber = state.kind === 'ready' ? Number(state.report.week.split('W')[1]) : null;
+  const dates = state.kind === 'ready' ? weekDates(state.report.week) : null;
 
   return (
     <Screen tone="dawn" inTabs>
-      <Text style={styles.caption}>{weekNumber ? `Uke ${weekNumber}` : 'Forrige uke'}</Text>
-      <View style={styles.header}>
-        <Voice tone="dawn">Uken din</Voice>
-      </View>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <Text style={styles.caption}>{dates ? formatRange(dates[0], dates[6]) : 'Forrige uke'}</Text>
+          <Voice tone="dawn">Uka di</Voice>
+        </View>
 
-      {state.kind === 'loading' && <Voice tone="dawn" muted>Skriver brevet ditt. Det tar noen sekunder.</Voice>}
-
-      {state.kind === 'empty' && (
-        <Voice tone="dawn" muted>Forrige uke er tom. Snakk med meg noen kvelder, så ser vi mønstrene sammen.</Voice>
-      )}
-
-      {state.kind === 'error' && (
-        <>
-          <Voice tone="dawn" muted>Fikk ikke hentet uken din.</Voice>
-          <View style={styles.footer}>
-            <Button tone="dawn" label="Prøv igjen" onPress={retry} />
+        {state.kind === 'loading' && (
+          <View style={styles.quiet}>
+            <ActivityIndicator color={palette.textMuted} />
+            <Text style={styles.muted}>Skriver uka di …</Text>
           </View>
-        </>
+        )}
+
+        {state.kind === 'empty' && (
+          <Text style={styles.muted}>Forrige uke er tom. Snakk med meg noen kvelder, så ser vi mønstrene sammen.</Text>
+        )}
+
+        {state.kind === 'error' && (
+          <View style={styles.quiet}>
+            <Text style={styles.muted}>Fikk ikke hentet uka di.</Text>
+            <Button tone="dawn" variant="tonal" label="Prøv igjen" onPress={retry} />
+          </View>
+        )}
+
+        {state.kind === 'ready' && dates && <Report report={state.report} dates={dates} stats={stats} logs={logs} />}
+      </ScrollView>
+    </Screen>
+  );
+}
+
+type ReportProps = { report: WeeklyReport; dates: string[]; stats: Stats | null; logs: DailyLog[] | null };
+
+function Report({ report, dates, stats, logs }: ReportProps) {
+  const empty = report.patterns.length === 0 && report.wentWell.length === 0;
+  const hero = stats ? weekHero(stats, dates) : null;
+  const cards = logs ? goalCards(logs, dates) : [];
+
+  if (empty && !hero) {
+    return <Text style={styles.muted}>Uka har så vidt begynt. Snakk med meg noen kvelder, så ser vi mønstrene sammen.</Text>;
+  }
+
+  return (
+    <View style={styles.sections}>
+      {hero && (
+        <HeroCard value={percent(hero.rate)} label={`${hero.done} av ${hero.total} holdt`}>
+          <WeekBars bars={hero.bars} />
+        </HeroCard>
       )}
 
-      {state.kind === 'ready' && <Letter report={state.report} />}
-    </Screen>
+      {cards.length > 0 && (
+        <View style={styles.cards}>
+          {cards.map((c) => (
+            <StatCard key={c.title} label={c.title} value={`${c.done}/${c.total}`} note={c.note} />
+          ))}
+        </View>
+      )}
+
+      {report.patterns.length > 0 && (
+        <Section label="Mønster">
+          {report.patterns.map((p, i) => (
+            <Paragraph key={`p${i}`} text={p} />
+          ))}
+        </Section>
+      )}
+
+      {report.wentWell.length > 0 && (
+        <Section label="Det som holdt">
+          {report.wentWell.map((w, i) => (
+            <Paragraph key={`w${i}`} text={w} />
+          ))}
+        </Section>
+      )}
+
+      {report.suggestions.length > 0 && (
+        <Section label={report.suggestions.length === 1 ? 'Forslag' : 'Forslag til neste uke'}>
+          {report.suggestions.map((s, i) => (
+            <SuggestionCard key={`s${i}`} suggestion={s} />
+          ))}
+        </Section>
+      )}
+    </View>
+  );
+}
+
+function Section({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionLabel} accessibilityRole="header">
+        {label}
+      </Text>
+      {children}
+    </View>
+  );
+}
+
+// The first sentence carries the point, so it is bold; the rest explains it.
+function Paragraph({ text }: { text: string }) {
+  const match = /^(.+?[.!?])\s+([\s\S]+)$/.exec(text.trim());
+  return (
+    <Text style={styles.paragraph}>
+      <Text style={styles.strong}>{match ? match[1] : text}</Text>
+      {match ? ` ${match[2]}` : null}
+    </Text>
   );
 }
 
 type Answer = { kind: 'open' } | { kind: 'saving' } | { kind: 'yes'; calendarUrl: string | null } | { kind: 'no' } | { kind: 'error' };
 
-function Letter({ report }: { report: WeeklyReport }) {
-  const [suggestion] = report.suggestions;
+function SuggestionCard({ suggestion }: { suggestion: Suggestion }) {
   const [answer, setAnswer] = useState<Answer>({ kind: 'open' });
 
   async function accept() {
-    if (!suggestion?.goalId || !suggestion.change) {
+    if (!suggestion.goalId || !suggestion.change) {
       setAnswer({ kind: 'yes', calendarUrl: null });
       return;
     }
@@ -90,76 +181,103 @@ function Letter({ report }: { report: WeeklyReport }) {
       setAnswer({ kind: 'error' });
     }
   }
-  const empty = report.patterns.length === 0 && report.wentWell.length === 0;
-
-  if (empty) {
-    return <Voice tone="dawn" muted>Uken har så vidt begynt. Snakk med meg noen kvelder, så ser vi mønstrene sammen.</Voice>;
-  }
 
   return (
-    <>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.letter} showsVerticalScrollIndicator={false}>
-        {report.patterns.map((p, i) => (
-          <Text key={`p${i}`} style={styles.pattern}>
-            {p}
-          </Text>
-        ))}
-        {report.wentWell.map((w, i) => (
-          <Voice key={`w${i}`} tone="dawn" muted>
-            {w}
-          </Voice>
-        ))}
-      </ScrollView>
+    <View style={styles.card}>
+      <Text style={styles.cardText}>{suggestion.text}</Text>
 
-      {suggestion && (
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Forslag til neste uke</Text>
-          <Text style={styles.cardText}>{suggestion.text}</Text>
-
-          {(answer.kind === 'open' || answer.kind === 'saving' || answer.kind === 'error') && (
-            <View style={styles.actions}>
-              {answer.kind === 'error' && <Text style={styles.body}>Fikk ikke flyttet målet. Prøv igjen.</Text>}
-              <Button tone="dawn" label="Ja, gjør det" loading={answer.kind === 'saving'} onPress={accept} />
-              <View style={styles.center}>
-                <Button tone="dawn" variant="text" label="Ikke nå" onPress={() => setAnswer({ kind: 'no' })} />
-              </View>
-            </View>
-          )}
-
-          {answer.kind === 'yes' && (
-            <View style={styles.actions}>
-              <Text style={styles.body}>Avtalt. Målet er flyttet.</Text>
-              {answer.calendarUrl && (
-                <Button
-                  tone="dawn"
-                  variant="tonal"
-                  label="Legg i kalenderen"
-                  icon="calendar.badge.plus"
-                  onPress={() => Linking.openURL(answer.calendarUrl ?? '')}
-                  fill
-                />
-              )}
-            </View>
-          )}
-
-          {answer.kind === 'no' && <Text style={styles.body}>Greit. Vi lar det være som det er.</Text>}
-        </View>
+      {(answer.kind === 'open' || answer.kind === 'saving' || answer.kind === 'error') && (
+        <>
+          {answer.kind === 'error' && <Text style={styles.note}>Fikk ikke flyttet målet. Prøv igjen.</Text>}
+          <ChoicePills
+            yes="Ja, gjør det"
+            no="Ikke nå"
+            loading={answer.kind === 'saving'}
+            onYes={accept}
+            onNo={() => setAnswer({ kind: 'no' })}
+          />
+        </>
       )}
-    </>
+
+      {answer.kind === 'yes' && (
+        <>
+          <Text style={styles.note}>Avtalt. Målet er flyttet.</Text>
+          {answer.calendarUrl && (
+            <Button
+              tone="dawn"
+              variant="tonal"
+              label="Legg i kalenderen"
+              icon="calendar.badge.plus"
+              onPress={() => Linking.openURL(answer.calendarUrl ?? '')}
+              fill
+            />
+          )}
+        </>
+      )}
+
+      {answer.kind === 'no' && <Text style={styles.note}>Greit. Vi lar det være som det er.</Text>}
+    </View>
   );
 }
 
+// One bar per day of the report week; the heaviest day gets the dashed ring.
+function weekHero(stats: Stats, dates: string[]) {
+  const days = dates.map((date) => stats.days.find((d) => d.date === date) ?? null);
+  const done = days.reduce((n, d) => n + (d?.done ?? 0), 0);
+  const partial = days.reduce((n, d) => n + (d?.partial ?? 0), 0);
+  const total = days.reduce((n, d) => n + (d?.total ?? 0), 0);
+  if (total === 0) return null;
+
+  const rated = days.filter((d) => d?.rate !== null && d?.rate !== undefined).map((d) => d?.rate ?? 0);
+  const lowest = rated.length > 1 && Math.min(...rated) < Math.max(...rated) ? Math.min(...rated) : null;
+  let markedOnce = false;
+  const bars: Bar[] = dates.map((date, i) => {
+    const rate = days[i]?.rate ?? null;
+    const marked = !markedOnce && lowest !== null && rate === lowest;
+    if (marked) markedOnce = true;
+    return { key: date, label: weekdayLetter[weekdayOf(date)], rate, marked };
+  });
+
+  return { rate: (done + partial / 2) / total, done, total, bars };
+}
+
+// Up to four goals: how many times it held, and the reason heard most often when it did not.
+function goalCards(logs: DailyLog[], dates: string[]) {
+  const inWeek = new Set(dates);
+  const goals = new Map<string, { title: string; done: number; total: number; reasons: Map<string, number> }>();
+  for (const log of logs) {
+    if (!inWeek.has(log.date)) continue;
+    for (const e of log.entries) {
+      const g = goals.get(e.goalId) ?? { title: e.goalTitle, done: 0, total: 0, reasons: new Map<string, number>() };
+      g.total += 1;
+      if (e.status === 'done') g.done += 1;
+      else if (e.reason) {
+        const reason = e.reason.charAt(0).toLowerCase() + e.reason.slice(1);
+        g.reasons.set(reason, (g.reasons.get(reason) ?? 0) + 1);
+      }
+      goals.set(e.goalId, g);
+    }
+  }
+  return [...goals.values()].slice(0, 4).map((g) => {
+    const [top] = [...g.reasons.entries()].sort((a, b) => b[1] - a[1]);
+    const note = g.done === g.total ? 'holdt hver gang' : (top?.[0] ?? null);
+    return { title: g.title, done: g.done, total: g.total, note };
+  });
+}
+
 const styles = StyleSheet.create({
-  header: { marginTop: space.xs, marginBottom: space.lg },
-  pattern: { ...type.lead, color: palette.text },
-  caption: { ...type.caption, color: palette.textMuted },
-  scroll: { flex: 1 },
-  letter: { gap: space.md, paddingBottom: space.lg },
-  footer: { gap: space.sm, paddingTop: space.md },
-  body: { ...type.body, color: palette.text },
-  card: { borderTopWidth: 1, borderTopColor: palette.text, paddingTop: space.md, gap: space.sm, marginTop: space.md },
-  cardLabel: { ...type.caption, color: palette.textMuted },
-  cardText: { ...type.body, ...type.strong, color: palette.text },
-  actions: { gap: space.xs, marginTop: space.sm },
-  center: { alignItems: 'center' },
+  content: { paddingBottom: space.xl, gap: space.lg },
+  header: { gap: 2 },
+  caption: { ...type.caption, ...type.strong, color: palette.textMuted },
+  quiet: { gap: space.md, alignItems: 'flex-start', paddingTop: space.sm },
+  muted: { ...type.body, color: palette.textMuted },
+  sections: { gap: space.lg },
+  cards: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm + 4 },
+  section: { gap: space.sm + 4 },
+  sectionLabel: { ...type.caption, ...type.strong, color: palette.textMuted },
+  paragraph: { ...type.body, lineHeight: 24, color: palette.text },
+  strong: { fontWeight: '700' },
+  card: { backgroundColor: palette.surface, borderRadius: radius.lg - 4, padding: space.md + 2, gap: space.md - 2 },
+  cardText: { ...type.body, lineHeight: 24, ...type.strong, color: palette.text },
+  note: { ...type.body, color: palette.textMuted },
 });

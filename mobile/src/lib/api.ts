@@ -10,6 +10,7 @@ import {
   mockInterpretDay,
   mockLogs,
   mockParseGoals,
+  mockStats,
   mockToday,
   mockTranscribe,
   mockWeeklyReport,
@@ -22,6 +23,7 @@ import type {
   GoalDraft,
   GoalEntry,
   Interpretation,
+  Stats,
   Suggestion,
   Today,
   WeeklyReport,
@@ -138,4 +140,8 @@ export const api = {
       throw error;
     }
   },
+
+  // Progress dashboard: plain counting over the last `weeks` weeks up to today. Instant.
+  getStats: (weeks = 4): Promise<Stats> =>
+    USE_MOCK ? later(mockStats(weeks), 300) : request(`/stats?weeks=${weeks}`),
 };
