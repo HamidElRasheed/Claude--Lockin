@@ -1,11 +1,12 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Chip } from '@/components/Chip';
 import { Icon } from '@/components/Icon';
 import { Segmented } from '@/components/Segmented';
+import { api } from '@/lib/api';
 import { circleStandings, cheers, myCircle, type CircleStanding, type Member } from '@/lib/circles';
 import { formatScore } from '@/lib/days';
 import { palettes, radius, space, type } from '@/theme';
@@ -20,19 +21,41 @@ export function CircleView() {
   const router = useRouter();
   const [view, setView] = useState<View_>('circle');
   const [cheer, setCheer] = useState<string | null>(null);
+  const [me, setMe] = useState<{ score: number; evenings: number } | null>(null);
+  const [opponentId, setOpponentId] = useState('c2');
+  const [picking, setPicking] = useState(false);
+  const [challenged, setChallenged] = useState<string | null>(null);
 
-  const members = [...myCircle.members].sort((a, b) => b.score - a.score);
-  const standings = [...circleStandings].sort((a, b) => b.score - a.score);
+  // Your own row uses your real numbers from the backend; the friends are demo data.
+  useEffect(() => {
+    api
+      .getStats(1)
+      .then((s) => {
+        if (s.overall.scoreAverage !== null) setMe({ score: s.overall.scoreAverage, evenings: Math.min(7, s.overall.reviews) });
+      })
+      .catch(() => setMe(null));
+  }, []);
+
+  const memberList: Member[] = myCircle.members.map((m) => (m.you && me ? { ...m, score: me.score, evenings: me.evenings } : m));
+  const members = [...memberList].sort((a, b) => b.score - a.score);
+  const circleScore = Math.round((memberList.reduce((n, m) => n + m.score, 0) / memberList.length) * 10) / 10;
+  const standings = circleStandings
+    .map((c) => (c.yours ? { ...c, score: circleScore } : c))
+    .sort((a, b) => b.score - a.score);
   const place = standings.findIndex((c) => c.yours) + 1;
   const ours = standings.find((c) => c.yours);
+  const opponent = standings.find((c) => c.id === opponentId) ?? standings.find((c) => !c.yours);
 
   return (
     <View style={styles.wrap}>
       <View style={styles.hero}>
         <View style={styles.heroTop}>
-          <Text style={styles.heroEyebrow}>
-            {myCircle.name} · {myCircle.members.length} venner
-          </Text>
+          <View style={styles.heroTitle}>
+            <Text style={styles.heroEyebrow}>
+              {myCircle.name} · {myCircle.members.length} venner
+            </Text>
+            <Text style={styles.preview}>Forhåndsvisning</Text>
+          </View>
           <View style={styles.faces}>
             {myCircle.members.map((m, i) => (
               <View key={m.id} style={[styles.face, i > 0 && styles.faceOverlap, m.you && styles.faceYou]}>
@@ -50,6 +73,22 @@ export function CircleView() {
           {myCircle.daysLeft} dager igjen av uke {myCircle.week}.
         </Text>
       </View>
+
+      {ours && opponent && (
+        <Duel
+          ours={ours}
+          them={opponent}
+          picking={picking}
+          challenged={challenged}
+          others={standings.filter((c) => !c.yours && c.id !== opponent.id)}
+          onPick={() => setPicking((p) => !p)}
+          onChallenge={(c) => {
+            setOpponentId(c.id);
+            setChallenged(c.name);
+            setPicking(false);
+          }}
+        />
+      )}
 
       <Segmented
         options={[
@@ -91,6 +130,66 @@ export function CircleView() {
       <Text style={styles.footnote}>
         Sirkelen ser bare hvor mange kvelder du har gjort og dagspoengene dine. Aldri hva du sa.
       </Text>
+    </View>
+  );
+}
+
+type DuelProps = {
+  ours: CircleStanding;
+  them: CircleStanding;
+  others: CircleStanding[];
+  picking: boolean;
+  challenged: string | null;
+  onPick: () => void;
+  onChallenge: (c: CircleStanding) => void;
+};
+
+// This week's head-to-head: your circle against one other circle, on the mean day score.
+function Duel({ ours, them, others, picking, challenged, onPick, onChallenge }: DuelProps) {
+  const total = ours.score + them.score;
+  const share = total > 0 ? ours.score / total : 0.5;
+  const gap = Math.round(Math.abs(ours.score - them.score) * 10) / 10;
+  const line =
+    ours.score > them.score
+      ? `Dere leder med ${formatScore(gap)}. Hold det gående i kveld.`
+      : ours.score < them.score
+        ? `Dere ligger ${formatScore(gap)} bak. To gode kvelder kan snu det.`
+        : 'Helt likt. Kvelden i kveld avgjør.';
+
+  return (
+    <View style={styles.duel}>
+      <View style={styles.duelHead}>
+        <Text style={styles.duelLabel}>Ukens duell</Text>
+        <Text style={styles.detail}>{myCircle.daysLeft} dager igjen</Text>
+      </View>
+      <View style={styles.duelRow} accessible accessibilityLabel={`${ours.name} ${formatScore(ours.score)} mot ${them.name} ${formatScore(them.score)}`}>
+        <View style={styles.duelSide}>
+          <Text style={styles.duelName} numberOfLines={1}>
+            {ours.name}
+          </Text>
+          <Text style={styles.duelScore}>{formatScore(ours.score)}</Text>
+        </View>
+        <Text style={styles.vs}>mot</Text>
+        <View style={[styles.duelSide, styles.duelRight]}>
+          <Text style={styles.duelName} numberOfLines={1}>
+            {them.name}
+          </Text>
+          <Text style={[styles.duelScore, styles.duelScoreThem]}>{formatScore(them.score)}</Text>
+        </View>
+      </View>
+      <View style={styles.tug}>
+        <View style={[styles.tugOurs, { flex: share }]} />
+        <View style={[styles.tugThem, { flex: 1 - share }]} />
+      </View>
+      <Text style={styles.note}>{challenged ? `Utfordring sendt til ${challenged}. ${line}` : line}</Text>
+      <Button tone="dawn" variant="text" label={picking ? 'Lukk' : 'Utfordre en annen sirkel'} onPress={onPick} />
+      {picking && (
+        <View style={styles.chips}>
+          {others.map((c) => (
+            <Chip key={c.id} label={c.name} onPress={() => onChallenge(c)} />
+          ))}
+        </View>
+      )}
     </View>
   );
 }
@@ -152,7 +251,33 @@ const styles = StyleSheet.create({
   wrap: { gap: space.lg },
   hero: { backgroundColor: palette.hero, borderRadius: radius.lg, padding: space.lg - 4, gap: space.md },
   heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.sm },
-  heroEyebrow: { ...type.caption, fontSize: 15, ...type.strong, color: palette.heroMuted, flexShrink: 1 },
+  heroTitle: { flexShrink: 1, gap: space.xs },
+  heroEyebrow: { ...type.caption, fontSize: 15, ...type.strong, color: palette.heroMuted },
+  preview: {
+    alignSelf: 'flex-start',
+    ...type.caption,
+    fontSize: 11,
+    ...type.strong,
+    color: palette.heroText,
+    backgroundColor: palette.heroTrack,
+    borderRadius: radius.pill,
+    paddingHorizontal: space.sm,
+    paddingVertical: 2,
+    overflow: 'hidden',
+  },
+  duel: { backgroundColor: palette.surface, borderRadius: radius.lg - 4, padding: space.md + 2, gap: space.sm + 4 },
+  duelHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+  duelLabel: { ...type.caption, ...type.strong, color: palette.text },
+  duelRow: { flexDirection: 'row', alignItems: 'flex-end', gap: space.sm },
+  duelSide: { flex: 1, gap: 2 },
+  duelRight: { alignItems: 'flex-end' },
+  duelName: { ...type.body, ...type.strong, color: palette.text },
+  duelScore: { fontSize: 40, lineHeight: 44, fontWeight: '800', letterSpacing: -1.5, color: palette.text },
+  duelScoreThem: { color: palette.textMuted },
+  vs: { ...type.caption, ...type.strong, color: palette.textMuted, paddingBottom: space.sm },
+  tug: { flexDirection: 'row', height: 8, borderRadius: radius.pill, overflow: 'hidden', gap: 3 },
+  tugOurs: { backgroundColor: palette.text, borderRadius: radius.pill },
+  tugThem: { backgroundColor: palette.tonal, borderRadius: radius.pill },
   faces: { flexDirection: 'row' },
   face: {
     width: FACE,
